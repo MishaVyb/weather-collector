@@ -1,0 +1,10 @@
+[tool.black]
+skip-string-normalization = 1       # disable converting single quote to double
+exclude = '/venv/|/tests/'          # ignoring venv and tests folders
+# line-length = 79                  # max line length
+                                    # PEP8: 79 | black: 88 | google: 120
+
+[tool.isort]
+skip_glob = '/tests/*'              # ignoring tests folders
+
+
