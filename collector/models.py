@@ -7,10 +7,6 @@ from sqlalchemy import orm, sql
 import sqlalchemy.dialects.sqlite as sqlite
 
 Base: TypeAlias = orm.declarative_base()  # type: ignore
-# ENGENE = db.create_engine('sqlite:///db.sqlite3', echo=True, future=True)
-# SESSION = orm.Session(# ENGENE)
-# class DBSession(orm.Session):
-
 
 class BaseModel(Base):
     __abstract__ = True

@@ -115,15 +115,6 @@ class FetchWeather(BaseSerivce, DBSessionMixin, FetchServiceMixin):
         self.params['lon'] = str(city.longitude)
 
         measur = super().fetch()
-        # response = requests.get(self.url, self.params)
-
-        # if response.status_code != HTTPStatus.OK:
-        #     raise ResponseError(response)
-
-        # try:
-        #     measur = WetherMeasurementSchema.parse_raw(response.text)
-        # except pydantic.ValidationError as e:
-        #     raise ResponseSchemaError(e)
 
         extra: dict = self.response.json()
         for field in self.schema.__fields__:

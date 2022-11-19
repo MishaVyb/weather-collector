@@ -4,18 +4,17 @@ Main config file for pytest.
 import os
 import sys
 
+import pytest
 
-# Custom fixtures could be applyed here as pytest plugins.
-#
-# pytest_plugins = [
-#     'tests.fixtures.fixture_users',
-#     ...
-# ]
+pytest_plugins = [
+    'tests.fixtures.fixture_db',
+    'tests.fixtures.fixture_config',
+]
 
 
-# Source directory could be applyed here or at 'pytest.ini' file.
-#
-# CURRENT_DIR = os.path.dirname(os.path.abspath(__file__))
-# WORKSPACE_DIR = os.path.dirname(CURRENT_DIR)
-# SRC_DIR = os.path.join(WORKSPACE_DIR, 'src')
-# sys.path.append(SRC_DIR)
+@pytest.fixture(autouse=True)
+def new_line():
+    """
+    Fixture simple makes new line to seperate each test logging ouput.
+    """
+    print('\n')
