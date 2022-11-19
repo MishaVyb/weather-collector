@@ -1,4 +1,3 @@
-
 from __future__ import annotations
 from datetime import datetime
 
@@ -17,22 +16,68 @@ import sqlalchemy as db
 import sqlalchemy.orm as orm
 
 from collector.configurations import CONFIG
-from collector.exeptions import ResponseError, ResponseSchemaError
+from collector.exeptions import NoDataError, ResponseError, ResponseSchemaError
 from collector.functools import init_logger
 from collector.models import CityModel, ExtraMeasurementDataModel, MeasurementModel
-from collector.services.base import BaseSerivce
+from collector.services.base import BaseSerivce, FetchServiceMixin
 from collector.session import DBSessionMixin
 
 
 logger = init_logger(__name__)
+
+
 ########################################################################################
-###
+### Cities Schemas
 ########################################################################################
 
 
-class InitCities(BaseSerivce):
+class CitySchema(pydantic.BaseModel):
+    name: str
+    country: str | None
+    countryCode: str | None
+    latitude: float | None
+    longitude: float | None
+    population: int | None
+
+    @pydantic.validator('name')
+    def clean_name_unicode(cls, value):
+        return str(
+            unicodedata.normalize('NFKD', value)
+            .encode('ascii', 'ignore')
+            .decode("utf-8")
+        )
+
+
+class CitiesListSchema(pydantic.BaseModel):
+    data: list[CitySchema]
+
+
+class CityCoordinatesSchema(pydantic.BaseModel):
+    name: str
+    lat: float
+    lon: float
+    # country: str | None
+    # state: str | None
+    # local_names: list[str] | None
+
+
+########################################################################################
+### Init Cities
+########################################################################################
+
+
+class InitCities(BaseSerivce, DBSessionMixin):
+    """
+    Load cities list from JSON file and appended them to database.
+    If `predefined` is provided, that list will be used instead.
+
+    options:
+    -O, --override       clear all cites at database.
+    """
+
     description = 'Init cities list from JSON file'
     command = 'init_cities'
+
 
     #
     #  file_name = 'cities.json'
@@ -47,40 +92,39 @@ class InitCities(BaseSerivce):
     #         help='Absoulte or relative path to JSON file with cities list. ',
     #     )
 
+    def __init__(self, *, override, predefined: list[CitySchema] = [], **kwargs) -> None:
+        self.predefined = predefined
+        self.override = override
+        BaseSerivce.__init__(self, **kwargs)
+        DBSessionMixin.__init__(self)
+
     def exicute(self):
-        ...
+        super().exicute()
+        cities = self.predefined or self.load_from_file()
+        if self.override:
+            deleted = self.delete(CityModel)
+            logger.info(f'Delete {deleted} records at {CityModel}')
+
+        self.create_from_schema(CityModel, *cities)
+        self.save()
+
+    def load_from_file(self):
+        try:
+            return pydantic.parse_file_as(list[CitySchema], CONFIG.cities_file)
+        except FileNotFoundError as e:
+            raise NoDataError(e, msg='Init cities from file failed. ')
+
 
 
 ########################################################################################
-### FetchCities
+### Fetch Cities
 ########################################################################################
 
 
-class CitySchema(pydantic.BaseModel):
-    name: str
-    country: str
-    countryCode: str
-    latitude: float
-    longitude: float
-    population: int
-
-    @pydantic.validator('name')
-    def clean_name_unicode(cls, value):
-        return str(
-            unicodedata.normalize('NFKD', value)
-            .encode('ascii', 'ignore')
-            .decode("utf-8")
-        )
-        # return value
-
-
-class CitiesListSchema(pydantic.BaseModel):
-    data: list[CitySchema]
-
-
-class FetchCities(BaseSerivce):
+class FetchCities(BaseSerivce, FetchServiceMixin):
     """
-    Fetch cities list from GeoDB API.
+    Fetch cities list from GeoDB API, save them to JSON file for future custom
+    configuration and call for `InitCities` service to store all new cities at database.
     Endpoint detail information: http://geodb-cities-api.wirefreethought.com/
     """
 
@@ -88,51 +132,35 @@ class FetchCities(BaseSerivce):
     command = 'fetch_cities'
     url = 'http://geodb-free-service.wirefreethought.com/v1/geo/cities'
     params = {"sort": "-population", "types": "CITY"}
+    schema = CitiesListSchema
 
     def exicute(self):
         super().exicute()
         cities = self.fetch()
-        self.save(cities)
-        CreateCities(cities).exicute()
+        self.append_to_file(cities)
+        InitCities(predefined=cities).exicute()
 
     def fetch(self):
         # [NOTE]
         # We are using GeoDB API Service under FREE plan provided at specified url.
-        # Unfortunately, in that case limit params is restricted up to 10 and we need
-        # make request 5 times to get 50 cityes.
+        # Unfortunately, in that case limit params is restricted up to 10.
+        # And for insntace we need make request 5 times to get 50 cityes.
         restricted_limit = 10
         self.params['limit'] = restricted_limit
         cities: list[CitySchema] = []
 
-        for i in range(int(CONFIG.cities_amount / restricted_limit) + 1):
+        for i in range(CONFIG.cities_amount // restricted_limit + 1):
             offset = i * restricted_limit
             self.params['offset'] = offset
 
             logger.info(f'Fetching cities: {offset=} limit={restricted_limit}')
-            response = requests.get(url=self.url, params=self.params)
 
-            if response.status_code != HTTPStatus.OK:
-                raise ResponseError(response)
+            # `data` is a core field at response json with list of cities
+            cities += super().fetch().data
 
-            try:
-                current_page_cities = CitiesListSchema.parse_raw(response.text)
-                cities += current_page_cities.data
-            except pydantic.ValidationError as e:
-                raise ResponseSchemaError(e)
-
-        # logger.info(
-        #     '\n'.join(
-        #         [
-        #             str(
-        #                 f'{city.name} {city.population} {city.latitude=} {city.longitude}'
-        #             )
-        #             for city in cities
-        #         ]
-        #     )
-        # )
         return cities[0 : CONFIG.cities_amount]
 
-    def save(self, cities: list[CitySchema]):
+    def append_to_file(self, cities: list[CitySchema]):
         if os.path.isfile(CONFIG.cities_file):
             pass
             # [TODO]
@@ -142,22 +170,50 @@ class FetchCities(BaseSerivce):
             json.dump([city.dict() for city in cities], file)
 
 
-########################################################################################
-### Create
-########################################################################################
 
 
+class FetchCoordinates(BaseSerivce, DBSessionMixin, FetchServiceMixin):
+    """
+    If city object doesn't have coordinates, we should get them by calling for
+    Open Weather Geocoding API. The API documantation says:
 
-class CreateCities(BaseSerivce, DBSessionMixin):
-    def __init__(self, cities: list[CitySchema]) -> None:
-        if not cities:
-            logger.warning('No cities provided for creation. ')
+    `Please use Geocoder API if you need automatic convert city names and zip-codes to
+    geo coordinates and the other way around. Please note that API requests by city
+    name, zip-codes and city id have been deprecated.`
 
-        self.cities = cities
-        super().__init__()
+    Endpont detail information: https://openweathermap.org/api/geocoding-api
+    """
+
+    description = 'Fetch wether for cities and store data into DB. '
+    command = 'fetch_coordinates'
+    url = 'http://api.openweathermap.org/geo/1.0/direct'
+    schema = list[CityCoordinatesSchema]
+    params = {
+        "appid": CONFIG.open_wether_key,
+        "limit": 10,
+    }
+
+    def __init__(self, city: CityModel | None = None, **kwargs) -> None:
+        if not city:
+            raise NotImplementedError('This behavior is not implemented yet. ')
+
+        BaseSerivce.__init__(self, **kwargs)
+        DBSessionMixin.__init__(self)
+
+        self.city = city
+        self.params['q'] = f'{city.name},{city.countryCode}'
+
 
     def exicute(self):
-        super().exicute()
-        self.session.add_all([CityModel(**city.dict()) for city in self.cities])
-        self.session.commit()
-        self.session.close()
+        geo_list: list[CityCoordinatesSchema] = self.fetch()
+        coordinates = geo_list[0]
+        self.city.latitude = coordinates.lat
+        self.city.longitude = coordinates.lon
+        self.save()
+
+    def fetch(self):
+        logger.info(f'Fetching coordinates for {self.city}. ')
+        return super().fetch()
+
+
+

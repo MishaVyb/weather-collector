@@ -1,4 +1,4 @@
-class _BaseExeption(Exception):
+class CollectorBaseExeption(Exception):
     message: str = ''
 
     def __init__(self, *args: object, msg: str = '') -> None:
@@ -9,7 +9,7 @@ class _BaseExeption(Exception):
         return self.message + f'Details: {self.args}'
 
 
-class ResponseError(_BaseExeption):
+class ResponseError(CollectorBaseExeption):
     message = 'Unexpected response. '
 
 
@@ -17,5 +17,5 @@ class ResponseSchemaError(ResponseError):
     message = 'Unexpected response data schema. '
 
 
-class NoDataError(_BaseExeption):
+class NoDataError(CollectorBaseExeption):
     message = 'No data privided.'

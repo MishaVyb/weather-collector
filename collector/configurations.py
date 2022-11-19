@@ -13,10 +13,19 @@ class CollectorConfig(pydantic.BaseConfig):
     debug = True
     cities_amount: int = 10
     cities_file: str = 'cities.json'
+    collect_weather_delay = 5
+    "Delay between every wether measurements. Seconds."
+
+    # [NOTE]
+    # Default key is getting access for Open Weather under FREE plan and shold be used
+    # only for demonstration porpuses. Restrictions:
+    # 60 calls/minute
+    # 1,000,000 calls/month
     open_wether_key: str = 'deecec0236349da5eb1666916ba49e8f'
 
     class Config:
         env_file = ".env"
+
 
 # try:
 #     CONFIG = CollectorConfig.parse_file(CONFIG_FILE)

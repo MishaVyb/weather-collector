@@ -5,7 +5,7 @@ from http import HTTPStatus
 import json
 import os
 from pprint import pformat
-from typing import Iterable
+from typing import Iterable, Type
 import pydantic
 
 import requests
@@ -36,6 +36,14 @@ class BaseSerivce:
     #     Get services list
     #     """
     #     return BaseSerivce.__subclasses__()
+
+    def __init__(self, **kwargs) -> None:
+        pass
+
+    @staticmethod
+    def get_all_services():
+        services = BaseSerivce.__subclasses__()
+        
 
     @staticmethod
     def get_service(*, command: str):
@@ -72,3 +80,31 @@ class BaseSerivce:
 
     def __str__(self) -> str:
         return f'<{self.__class__.__name__}>'
+
+
+class FetchServiceMixin:
+    url: str = ''
+    params: dict = {
+        "appid": CONFIG.open_wether_key,
+        "units": "metric",
+    }
+    schema: Type[pydantic.BaseModel] | None = None
+    "Pydantic Model to parse response JSON data."
+
+    def exicute(self):
+        self.fetch()
+
+    def fetch(self) -> dict | list | pydantic.BaseModel:
+        self.response = requests.get(self.url, self.params)
+
+        if self.response.status_code != HTTPStatus.OK:
+            raise ResponseError(self.response, self.response.json())
+        if not self.schema:
+            return self.response.json()
+
+        try:
+            instance = pydantic.parse_obj_as(self.schema, self.response.json())
+        except pydantic.ValidationError as e:
+            raise ResponseSchemaError(e)
+
+        return instance

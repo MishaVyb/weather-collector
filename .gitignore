@@ -360,6 +360,7 @@ venv*
 
 # local storage
 *.sqlite3
+cities.json
 
 # tmp files
 Untitled*
