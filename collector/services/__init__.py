@@ -1,7 +1,6 @@
-
-__all__=['base', 'cities', 'measurements']
+__all__ = ['base', 'cities', 'wether']
 
 
 from .base import BaseSerivce
 from .cities import InitCities, FetchCities
-from .measurements import FetchWeather, CollectWether
+from .wether import FetchWeather, CollectWether

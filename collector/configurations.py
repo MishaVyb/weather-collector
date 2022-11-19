@@ -11,7 +11,7 @@ logger = init_logger(__name__)
 
 class CollectorConfig(pydantic.BaseConfig):
     debug = True
-    cities_amount: int = 10
+    cities_amount: int = 2
     cities_file: str = 'cities.json'
     collect_weather_delay = 5
     "Delay between every wether measurements. Seconds."

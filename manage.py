@@ -11,13 +11,8 @@ logger = init_logger(__name__)
 
 def main():
     parser = argparse.ArgumentParser(description="Wether collector. ")
-    # for service in BaseSerivce.__subclasses__():
-    #     parser.add_argument(
-    #         service.command,
-    #         type=str
-    #     )
-    # aaa = BaseSerivce.__subclasses__()
-    # ccc = aaa[3].__subclasses__()
+    for service in BaseSerivce.__subclasses__():
+        service.add_argument(parser)
 
     parser.add_argument(
             BaseSerivce.command,
@@ -26,23 +21,12 @@ def main():
             choices=[service.command for service in BaseSerivce.__subclasses__()],
         )
 
-    parser.add_argument(
-            '-O',
-            '--override',
-            action='store_true',
-            help='replace cites',
-        )
-
     args = parser.parse_args()
-    logger.info(args)
-
     service_class = BaseSerivce.get_service(command=args.service)
-    logger.info(service_class)
+    logger.debug(args)
+    logger.debug(service_class)
 
-    aaa = args._get_kwargs()
-    ddd = dict(aaa)
-    service = service_class(**ddd)
-
+    service = service_class(**dict(args._get_kwargs()))
     try:
         service.exicute()
     except CollectorBaseExeption as e:

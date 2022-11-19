@@ -78,25 +78,22 @@ class InitCities(BaseSerivce, DBSessionMixin):
     description = 'Init cities list from JSON file'
     command = 'init_cities'
 
-
-    #
-    #  file_name = 'cities.json'
-    # def __init__(self, file: str = 'cities.json') -> None:
-    #     super().__init__()
-
-    # @classmethod
-    # def add_argument(cls, parser: argparse.ArgumentParser):
-    #     parser.add_argument(
-    #         'file_name',
-    #         type=str,
-    #         help='Absoulte or relative path to JSON file with cities list. ',
-    #     )
-
-    def __init__(self, *, override, predefined: list[CitySchema] = [], **kwargs) -> None:
+    def __init__(
+        self, *, override: bool = False, predefined: list[CitySchema] = [], **kwargs
+    ) -> None:
         self.predefined = predefined
         self.override = override
         BaseSerivce.__init__(self, **kwargs)
         DBSessionMixin.__init__(self)
+
+    @classmethod
+    def add_argument(cls, parser: argparse.ArgumentParser):
+        parser.add_argument(
+                '-O',
+                '--override',
+                action='store_true',
+                help='Delete all records at Cities Table and store new list of cities.',
+            )
 
     def exicute(self):
         super().exicute()
@@ -113,7 +110,6 @@ class InitCities(BaseSerivce, DBSessionMixin):
             return pydantic.parse_file_as(list[CitySchema], CONFIG.cities_file)
         except FileNotFoundError as e:
             raise NoDataError(e, msg='Init cities from file failed. ')
-
 
 
 ########################################################################################
@@ -170,8 +166,6 @@ class FetchCities(BaseSerivce, FetchServiceMixin):
             json.dump([city.dict() for city in cities], file)
 
 
-
-
 class FetchCoordinates(BaseSerivce, DBSessionMixin, FetchServiceMixin):
     """
     If city object doesn't have coordinates, we should get them by calling for
@@ -203,7 +197,6 @@ class FetchCoordinates(BaseSerivce, DBSessionMixin, FetchServiceMixin):
         self.city = city
         self.params['q'] = f'{city.name},{city.countryCode}'
 
-
     def exicute(self):
         geo_list: list[CityCoordinatesSchema] = self.fetch()
         coordinates = geo_list[0]
@@ -214,6 +207,3 @@ class FetchCoordinates(BaseSerivce, DBSessionMixin, FetchServiceMixin):
     def fetch(self):
         logger.info(f'Fetching coordinates for {self.city}. ')
         return super().fetch()
-
-
-

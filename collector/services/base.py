@@ -43,7 +43,7 @@ class BaseSerivce:
     @staticmethod
     def get_all_services():
         services = BaseSerivce.__subclasses__()
-        
+
 
     @staticmethod
     def get_service(*, command: str):
@@ -58,17 +58,17 @@ class BaseSerivce:
         except StopIteration:
             raise ValueError(f'No service with this command: {command}. ')
 
-    @staticmethod
-    def get_parser():
-        parser = argparse.ArgumentParser(description=BaseSerivce.description)
+    # @staticmethod
+    # def get_parser():
+    #     parser = argparse.ArgumentParser(description=BaseSerivce.description)
 
-        # Base argument:
+    #     # Base argument:
 
-        # Other servicec argemnts:
-        l = BaseSerivce.__subclasses__()
-        for service in BaseSerivce.__subclasses__():
-            service.add_argument(parser)
-        return parser
+    #     # Other servicec argemnts:
+    #     l = BaseSerivce.__subclasses__()
+    #     for service in BaseSerivce.__subclasses__():
+    #         service.add_argument(parser)
+    #     return parser
 
     @classmethod
     def add_argument(cls, parser: argparse.ArgumentParser):

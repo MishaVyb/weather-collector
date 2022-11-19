@@ -44,9 +44,11 @@ class CityModel(BaseModel):
     population: int = db.Column(db.Integer())
 
     measurements: list[MeasurementModel] = orm.relationship(
-        'MeasurementModel', back_populates='city', cascade='all, delete-orphan'
+        'MeasurementModel',
+        back_populates='city',
+        cascade='all, delete-orphan',
     )
-    extra_measurements: list[ExtraMeasurementDataModel]  = orm.relationship(
+    extra_measurements: list[ExtraMeasurementDataModel] = orm.relationship(
         'ExtraMeasurementDataModel',
         uselist=False,
         back_populates='city',
@@ -71,7 +73,7 @@ class MeasurementModel(BaseModel):
     __tablename__ = 'weather_measurement'
 
     city: CityModel = orm.relationship('CityModel', back_populates='measurements')
-    city_id: int = db.Column(db.Integer, db.ForeignKey("city.id"))
+    city_id: int = db.Column(db.Integer, db.ForeignKey("city.id"), nullable=False)
 
     measure_at: datetime = db.Column(db.DateTime())
     "Time of data forecasted. UTC. "
@@ -113,5 +115,5 @@ class ExtraMeasurementDataModel(BaseModel):
     __tablename__ = 'extra_weather_measurement_data'
 
     city: CityModel = orm.relationship('CityModel', back_populates='extra_measurements')
-    city_id: int = db.Column(db.Integer, db.ForeignKey('city.id'))
+    city_id: int = db.Column(db.Integer, db.ForeignKey('city.id'), nullable=False)
     data: dict = db.Column(db.JSON())
