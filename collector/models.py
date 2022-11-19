@@ -4,10 +4,11 @@
 
 
 
+from datetime import datetime
 from typing import TypeAlias
 
 import sqlalchemy as db
-import sqlalchemy.orm as orm
+from sqlalchemy import orm, sql
 import sqlalchemy.dialects.sqlite as sqlite
 
 Base: TypeAlias = orm.declarative_base()  # type: ignore
@@ -19,41 +20,92 @@ Base: TypeAlias = orm.declarative_base()  # type: ignore
 class BaseModel(Base):
     __abstract__ = True
 
-    id = db.Column(
+    id: int = db.Column(
         db.Integer, nullable=False, unique=True, primary_key=True, autoincrement=True
     )
-    # created_at = Column(TIMESTAMP, nullable=True)
-    # updated_at = Column(TIMESTAMP, nullable=True)
+    created_at: datetime = db.Column(db.DateTime(timezone=True), server_default=sql.func.now())
+    updated_at: datetime = db.Column(db.DateTime(timezone=True), onupdate=sql.func.now())
 
     def __repr__(self):
         return f'<{self.__class__.__name__}({self.id=})>'
 
 
 class CityModel(BaseModel):
+    """
+    City representation. Name is required, other optional.
+    """
     __tablename__ = 'city'
 
-    name = db.Column(db.String(50),  nullable=False)
-    country = db.Column(db.String(50))
-    countryCode = db.Column(db.String(3))
-    latitude = db.Column(db.Float())
-    longitude = db.Column(db.Float())
-    population = db.Column(db.Integer())
+    name: str = db.Column(db.String(50),  nullable=False)
+    country: str = db.Column(db.String(50))
+    countryCode: str = db.Column(db.String(3))
+    latitude: float = db.Column(db.Float())
+    longitude: float = db.Column(db.Float())
+    population: int = db.Column(db.Integer())
 
     def __str__(self) -> str:
         return self.name
 
 
     measurements = orm.relationship(
-        "WeatherMeasurementModel", back_populates="city", cascade="all, delete-orphan"
+        "MeasurementModel", back_populates="city", cascade="all, delete-orphan"
     )
 
-class WeatherMeasurementModel(BaseModel):
+class MeasurementModel(BaseModel):
+    """
+    Main data from wether measurement.
+
+    Open Weather API provides a lot of information about current weather at the city.
+    We parsing and store in seperated fields only data from `main` field and storing
+    `dt` (`measure_at`) value as it is important data also.
+    """
     __tablename__ = 'weather_measurement'
 
-    city = orm.relationship('CityModel', back_populates='measurements')
-    city_id = db.Column(db.Integer, db.ForeignKey("city.id"))
-    temp = db.Column(db.Float())
-    measure_at = db.Column(db.DateTime(timezone='UTC'))
+    city: str = orm.relationship('CityModel', back_populates='measurements')
+    city_id: int = db.Column(db.Integer, db.ForeignKey("city.id"))
+    measure_at: datetime = db.Column(db.DateTime())
+    "Time of data forecasted. UTC. "
+
+    temp: float = db.Column(db.Float())
+    "Temperature. Celsius."
+    feels_like: float = db.Column(db.Float())
+    """
+    This temperature parameter accounts for the human perception of weather. Celsius.
+    """
+    temp_min: float = db.Column(db.Float())
+    """
+    Minimum temperature at the moment. This is minimal currently observed temperature
+    (within large megalopolises and urban areas). Celsius.
+    """
+    temp_max: float = db.Column(db.Float())
+    """
+    Maximum temperature at the moment. This is maximal currently observed temperature
+    (within large megalopolises and urban areas). Celsius.
+    """
+    pressure: int = db.Column(db.Integer())
+    """
+    Atmospheric pressure (on the sea level, if there is no sea_level or grnd_level).
+    hPa.
+    """
+    humidity: int = db.Column(db.Integer())
+    "Humidity. %"
+    sea_level: int = db.Column(db.Integer())
+    "Atmospheric pressure on the sea level. hPa."
+    grnd_level: int = db.Column(db.Integer())
+    "Atmospheric pressure on the ground level. hPa."
+
+
+class ExtraMeasurementDataModel(BaseModel):
+    """
+    Additional data from wether measurement.
+    """
+    __tablename__ = 'extra_weather_measurement_data'
+
+    data: dict = db.Column(db.JSON())
+
+
+
+
 
 
 

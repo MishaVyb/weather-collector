@@ -1,3 +1,4 @@
+
 from __future__ import annotations
 from datetime import datetime
 
@@ -17,69 +18,20 @@ import sqlalchemy.orm as orm
 
 from collector.configurations import CONFIG
 from collector.exeptions import ResponseError, ResponseSchemaError
-from collector.models import CityModel, WeatherMeasurementModel
+from collector.functools import init_logger
+from collector.models import CityModel, ExtraMeasurementDataModel, MeasurementModel
+from collector.services.base import BaseSerivce
+from collector.session import DBSessionMixin
 
 
-logger = logging.getLogger(__file__)
-
-
-class BaseSerivce:
-    description: str = 'Process collector services. '
-    command: str = 'service'
-    "Command name to run service in command line. "
-    # command_arguments: tuple[str, ...] = ()
-
-    # @staticmethod
-    # def services():
-    #     """
-    #     Get services list
-    #     """
-    #     return BaseSerivce.__subclasses__()
-
-    @staticmethod
-    def get_service(*, command: str):
-        """
-        Get collector service by provided command name.
-        """
-        filtered = filter(
-            lambda service: service.command == command, BaseSerivce.__subclasses__()
-        )
-        try:
-            return next(filtered)
-        except StopIteration:
-            raise ValueError(f'No service with this command: {command}. ')
-
-    @staticmethod
-    def get_parser():
-        parser = argparse.ArgumentParser(description=BaseSerivce.description)
-
-        # Base argument:
-
-        # Other servicec argemnts:
-        l = BaseSerivce.__subclasses__()
-        for service in BaseSerivce.__subclasses__():
-            service.add_argument(parser)
-        return parser
-
-    @classmethod
-    def add_argument(cls, parser: argparse.ArgumentParser):
-        pass
-
-    def exicute(self):
-        logger.info(f'{self} is running. ')
-        # self.exicute_subclass(self)
-
-    def __str__(self) -> str:
-        return f'<{self.__class__.__name__}>'
-
-
+logger = init_logger(__name__)
 ########################################################################################
 ###
 ########################################################################################
 
 
 class InitCities(BaseSerivce):
-    description = 'Init cities list from file'
+    description = 'Init cities list from JSON file'
     command = 'init_cities'
 
     #
@@ -127,6 +79,11 @@ class CitiesListSchema(pydantic.BaseModel):
 
 
 class FetchCities(BaseSerivce):
+    """
+    Fetch cities list from GeoDB API.
+    Endpoint detail information: http://geodb-cities-api.wirefreethought.com/
+    """
+
     description = 'Fetch cities list from GeoDB API'
     command = 'fetch_cities'
     url = 'http://geodb-free-service.wirefreethought.com/v1/geo/cities'
@@ -189,10 +146,7 @@ class FetchCities(BaseSerivce):
 ### Create
 ########################################################################################
 
-class DBSessionMixin():
-    def __init__(self) -> None:
-        self.engine = db.create_engine('sqlite:///db.sqlite3', echo=True, future=True)
-        self.session = orm.Session(self.engine)
+
 
 class CreateCities(BaseSerivce, DBSessionMixin):
     def __init__(self, cities: list[CitySchema]) -> None:
@@ -207,80 +161,3 @@ class CreateCities(BaseSerivce, DBSessionMixin):
         self.session.add_all([CityModel(**city.dict()) for city in self.cities])
         self.session.commit()
         self.session.close()
-
-
-########################################################################################
-### Collect
-########################################################################################
-
-
-class WetherMeasurementSchema(pydantic.BaseModel):
-    main: dict
-    dt: int
-    "Time of data forecasted, Unix, UTC (timestamp)"
-
-    @pydantic.validator('main')
-    def main_field_validator(cls, value: dict):
-        assert value.get('temp') is not None,  'Sub-field "temp" for "main" is required'
-        return value
-
-
-class CollectWeather(BaseSerivce, DBSessionMixin):
-    """
-    Fetch wether for cities and store data into DB.
-    By default fetching wether for all cities from DB.
-    """
-
-    description = 'Fetch wether for cities and store data into DB. '
-    command = 'collect_wether'
-    url = 'https://api.openweathermap.org/data/2.5/weather'
-    params = {
-        "appid": CONFIG.open_wether_key,
-        "units": "metric",
-    }
-
-    def __init__(self) -> None:
-        super().__init__()
-        self.cities: list[CityModel] = self.session.query(CityModel).all()
-
-    def exicute(self):
-        for city in self.cities:
-            if not all([city.longitude, city.latitude]):
-                self.fetch_coordinates()
-                self.store_coordinates()
-
-            measure = self.fetch_wether(city)
-            self.store_measure(city, measure)
-            # logger.info(f'{city}: {measure}')
-
-        self.session.commit()
-        self.session.close()
-
-    def fetch_wether(self, city: CityModel):
-        self.params['lat'] = city.latitude
-        self.params['lon'] = city.longitude
-        response = requests.get(self.url, self.params)
-
-        if response.status_code != HTTPStatus.OK:
-            raise ResponseError(response)
-
-        try:
-            main = WetherMeasurementSchema.parse_raw(response.text)
-        except pydantic.ValidationError as e:
-            raise ResponseSchemaError(e)
-
-        return main
-
-    def store_measure(self, city: CityModel, measure: WetherMeasurementSchema):
-        self.session.add(WeatherMeasurementModel(
-            city=city,
-            temp=measure.main['temp'],
-            measure_at=datetime.utcfromtimestamp(measure.dt)
-        ))
-
-
-    def fetch_coordinates(self, city: CityModel):
-        ...
-
-    def store_coordinates(self, city: CityModel):
-        ...

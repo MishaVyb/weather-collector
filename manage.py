@@ -3,9 +3,9 @@ import logging
 import sys
 
 from collector.services import BaseSerivce
+from collector.functools import init_logger
 
-logging.basicConfig(format='%(levelname)s - %(message)s', level=logging.INFO)
-logger = logging.getLogger(__file__)
+logger = init_logger(__name__)
 
 
 def main():
