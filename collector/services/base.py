@@ -15,7 +15,6 @@ logger = init_logger(__name__)
 
 
 class BaseSerivce:
-    description: str = 'Process collector services. '
     command: str = 'service'
     "Command name to run service in command line. "
 

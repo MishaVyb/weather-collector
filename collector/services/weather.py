@@ -73,7 +73,6 @@ class FetchWeather(
     Endpont detail information: https://openweathermap.org/current
     """
 
-    description = 'Fetch weather for cities and store data into DB. '
     command = 'fetch_weather'
     url = 'https://api.openweathermap.org/data/2.5/weather'
     schema = WeatherMeasurementSchema

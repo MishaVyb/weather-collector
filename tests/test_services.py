@@ -64,6 +64,7 @@ class TestServices:
         [
             pytest.param(0),
             pytest.param(10),
+            pytest.param(17),
             pytest.param(100, marks=pytest.mark.slow),
         ],
     )

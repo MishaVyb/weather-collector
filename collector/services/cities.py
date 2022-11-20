@@ -55,7 +55,7 @@ class CityCoordinatesSchema(pydantic.BaseModel):
 
 
 ########################################################################################
-# Init Cities
+# Init Cities Service
 ########################################################################################
 
 
@@ -63,12 +63,8 @@ class InitCities(BaseSerivce, DBSessionMixin):
     """
     Load cities list from JSON file and appended them to database.
     If `predefined` is provided, that list will be used instead.
-
-    options:
-    -O, --override       clear all cites at database.
     """
 
-    description = 'Init cities list from JSON file'
     command = 'init_cities'
 
     def __init__(
@@ -107,7 +103,7 @@ class InitCities(BaseSerivce, DBSessionMixin):
 
 
 ########################################################################################
-# Fetch Cities
+# Fetch Cities Service
 ########################################################################################
 
 
@@ -119,7 +115,6 @@ class FetchCities(BaseSerivce, FetchServiceMixin[CitiesListSchema]):
     Endpoint detail information: http://geodb-cities-api.wirefreethought.com/
     """
 
-    description = 'Fetch cities list from GeoDB API'
     command = 'fetch_cities'
     url = 'http://geodb-free-service.wirefreethought.com/v1/geo/cities'
     params = {"sort": "-population", "types": "CITY"}
@@ -168,6 +163,11 @@ class FetchCities(BaseSerivce, FetchServiceMixin[CitiesListSchema]):
             json.dump([city.dict() for city in cities], file)
 
 
+########################################################################################
+# Fetch Coordinates Service
+########################################################################################
+
+
 class FetchCoordinates(
     BaseSerivce,
     DBSessionMixin,
@@ -184,7 +184,6 @@ class FetchCoordinates(
     Endpont detail information: https://openweathermap.org/api/geocoding-api
     """
 
-    description = 'Fetch weather for cities and store data into DB. '
     command = 'fetch_coordinates'
     url = 'http://api.openweathermap.org/geo/1.0/direct'
     schema = list[CityCoordinatesSchema]
@@ -193,17 +192,23 @@ class FetchCoordinates(
         "limit": 10,
     }
 
-    def __init__(self, city: CityModel | None = None, **kwargs) -> None:
-        if not city:
-            raise NotImplementedError('This behavior is not implemented yet. ')
+    def __init__(self, city: CityModel | str, **kwargs) -> None:
 
         BaseSerivce.__init__(self, **kwargs)
         DBSessionMixin.__init__(self)
 
-        self.city = city
-        self.params['q'] = f'{city.name},{city.countryCode}'
+        if isinstance(city, str):
+            self.city: CityModel = (
+                self.query(CityModel).filter(CityModel.name == city).one()
+            )
+        else:
+            self.city = city
+
+        self.params['q'] = f'{self.city.name},{self.city.countryCode}'
 
     def exicute(self):
+        super().exicute()
+
         geo_list = self.fetch()
         if not geo_list:
             raise NoDataError(
