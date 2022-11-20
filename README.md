@@ -9,7 +9,7 @@
 <h3 align="center">Weather Collector</h3>
 
   <p align="center">
-    Python package for collecting wether measurements.
+    Python package for collecting weather measurements.
     <br />
     <a href="#usage"><strong>Explore Usage topic »</strong></a>
     <br />
