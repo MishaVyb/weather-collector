@@ -53,18 +53,18 @@ class CityModel(BaseModel):
 
 class MeasurementModel(BaseModel):
     """
-    Open Weather API provides a lot of information about current city weather.
-    Depending on locating and current weather situation some fields could be appear some
-    other could not. For that situation we decided to store all root fields in seperate
-    tables.
+    Open Weather API provides a lot of information about current city weather. Depending
+    on location and current weather situation some fields could appear some other could
+    not. For that situation we decided to store all root fields in separate tables.
 
     Why `main`?
-    The basic reason for collecting weather is understanding how to cool our servers.
-    Therefore, we parsing and store `main` field that contains current teperature. All
-    other data storing as json at `ExtraMeasurementDataModel` for any future porpuses.
+    The basic reason for collecting weather is understanding how to cool down company's
+    servers. Therefore, we parsing and store `main` field that contains current
+    temperature. All other data storing as json at `ExtraMeasurementDataModel` for any
+    future purposes.
 
-    We may describe other tables to store all toher data in relational (SQL) way later,
-    if we will need it.
+    We may describe other tables to store all the data in relational (SQL) way later, if
+    we will need it.
     """
 
     __tablename__ = 'weather_measurement'

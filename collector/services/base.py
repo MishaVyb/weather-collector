@@ -23,10 +23,13 @@ class BaseSerivce:
         pass
 
     @staticmethod
-    def manage_services():
+    def manage_services(argv: list[str]):
         """
         Parsing command line args and getting service initialized with thouse args.
         """
+        if not argv:
+            argv = ['collect', '--initial'] # default service call
+
         parser = argparse.ArgumentParser(description='Weather Collector. ')
         parser.add_argument(
             BaseSerivce.command,
@@ -37,7 +40,7 @@ class BaseSerivce:
         for service in BaseSerivce.__subclasses__():
             service.add_argument(parser)
 
-        args = parser.parse_args()
+        args = parser.parse_args(argv)
         service_class = BaseSerivce.get_service(command=args.service)
         return service_class(**dict(args._get_kwargs()))
 
