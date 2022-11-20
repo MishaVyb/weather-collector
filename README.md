@@ -93,12 +93,12 @@
     ```sh
     $ python3 manage.py
     ```
-    By default `collect` service with `--initial` flag is calling. So it equls to:
+    Note. It is default program exicution and it equls to:
     ```sh
     $ python3 manage.py collect --initial
     ```
 
-    After that collector looks for `cites.json` file where list of cites described.
+    For the beginning, collector looks for `cites.json` file where list of cites described.
     ```json
     [
         {"name": "Moscow"},
@@ -108,7 +108,7 @@
 
     If file does not exist, collector getting the most populated cities from GeoDB API.
     > WARNING! <br>
-    > Wether Collector do not guarantee that recived cites is a *real* the most populated cites ont the Earth at current moment. It's better to manualy fill `cities.json` file.
+    > Wether Collector do not guarantee that recived cites is a *real* the most populated cites on the Earth at current moment. It's better to manualy fill `cities.json` file.
 
     After that collector begin collecting weather from Open Weather API every hour and store all data into database.
 
