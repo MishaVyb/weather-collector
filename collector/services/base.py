@@ -18,21 +18,28 @@ class BaseSerivce:
     description: str = 'Process collector services. '
     command: str = 'service'
     "Command name to run service in command line. "
-    # command_arguments: tuple[str, ...] = ()
-
-    # @staticmethod
-    # def services():
-    #     """
-    #     Get services list
-    #     """
-    #     return BaseSerivce.__subclasses__()
 
     def __init__(self, **kwargs) -> None:
         pass
 
-    # @staticmethod
-    # def get_all_services():
-    #     services = BaseSerivce.__subclasses__()
+    @staticmethod
+    def manage_services():
+        """
+        Parsing command line args and getting service initialized with thouse args.
+        """
+        parser = argparse.ArgumentParser(description='Weather Collector. ')
+        parser.add_argument(
+            BaseSerivce.command,
+            type=str,
+            help='service to proceed',
+            choices=[service.command for service in BaseSerivce.__subclasses__()],
+        )
+        for service in BaseSerivce.__subclasses__():
+            service.add_argument(parser)
+
+        args = parser.parse_args()
+        service_class = BaseSerivce.get_service(command=args.service)
+        return service_class(**dict(args._get_kwargs()))
 
     @staticmethod
     def get_service(*, command: str):
@@ -47,25 +54,13 @@ class BaseSerivce:
         except StopIteration:
             raise ValueError(f'No service with this command: {command}. ')
 
-    # @staticmethod
-    # def get_parser():
-    #     parser = argparse.ArgumentParser(description=BaseSerivce.description)
-
-    #     # Base argument:
-
-    #     # Other servicec argemnts:
-    #     l = BaseSerivce.__subclasses__()
-    #     for service in BaseSerivce.__subclasses__():
-    #         service.add_argument(parser)
-    #     return parser
 
     @classmethod
     def add_argument(cls, parser: argparse.ArgumentParser):
-        pass
+       pass
 
     def exicute(self):
         logger.info(f'{self} is running. ')
-        # self.exicute_subclass(self)
 
     def __str__(self) -> str:
         return f'<{self.__class__.__name__}>'

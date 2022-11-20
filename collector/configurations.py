@@ -19,7 +19,9 @@ class CollectorConfig(pydantic.BaseSettings):
 
     open_wether_key: str = 'deecec0236349da5eb1666916ba49e8f'
     """
-    [NOTE]
+    Open Weather API key.
+
+    [NOTE] 
     Default key is getting access for Open Weather under FREE plan and shold be used
     only for demonstration porpuses. Restrictions:
     - 60 calls/minute

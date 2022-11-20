@@ -5,7 +5,7 @@ from collector.configurations import CONFIG, CollectorConfig
 from collector.exeptions import NoDataError
 
 from collector.functools import init_logger
-from collector.models import CityModel
+from collector.models import CityModel, MeasurementModel
 from collector.services.cities import (
     CitySchema,
     FetchCities,
@@ -102,24 +102,16 @@ class TestServices:
 
     def test_fetch_weather(self, seed_cities_to_database, session: orm.Session):
         FetchWeather().exicute()
-        ...
+        measures: list[MeasurementModel] = session.query(MeasurementModel).all()
+        for measure in measures:
+            assert measure.main
+            assert measure.main.temp
+            assert measure.extra
+            assert measure.extra.data
 
     ####################################################################################
     # Collect Weather Service
     ####################################################################################
-
-    def test_collect_weather(
-        self,
-        seed_cities_to_database,
-        session: orm.Session,
-        monkeypatch: pytest.MonkeyPatch,
-    ):
-        repeats = 2
-        cities_amount = 2
-        monkeypatch.setattr(CONFIG, 'cities_amount', cities_amount)
-
-        CollectWether(repeats=repeats).exicute()
-        ...
 
     def test_collect_weather_initial(
         self,
@@ -127,16 +119,41 @@ class TestServices:
         monkeypatch: pytest.MonkeyPatch,
     ):
         repeats = 2
-        cities_amount = 2
+        cities_amount = 3
         monkeypatch.setattr(CONFIG, 'cities_amount', cities_amount)
 
         CollectWether(repeats=repeats, initial=True).exicute()
-        ...
+        assert session.query(MeasurementModel).count() == cities_amount * repeats
+
+    def test_collect_weather_initial_many_cities(
+        self,
+        session: orm.Session,
+        monkeypatch: pytest.MonkeyPatch,
+    ):
+        repeats = 1
+        cities_amount = 50
+        monkeypatch.setattr(CONFIG, 'cities_amount', cities_amount)
+
+        CollectWether(repeats=repeats, initial=True).exicute()
+        assert session.query(MeasurementModel).count() == cities_amount * repeats
+
+    def test_collect_weather_with_cities_at_db(
+        self,
+        config: CollectorConfig,
+        cities_list: list,
+        seed_cities_to_database,
+        session: orm.Session,
+        monkeypatch: pytest.MonkeyPatch,
+    ):
+        repeats = 2
+        CollectWether(repeats=repeats).exicute()
+        assert session.query(MeasurementModel).count() == len(cities_list) * repeats
 
     ####################################################################################
     # Report Weather Service
     ####################################################################################
 
     def test_repost_weather(self, seed_cities_to_database, session: orm.Session):
+        CollectWether(repeats=2).exicute()
         ReportWeather(average=True, latest=True).exicute()
         ...

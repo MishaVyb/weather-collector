@@ -85,7 +85,7 @@ class InitCities(BaseSerivce, DBSessionMixin):
             '-O',
             '--override',
             action='store_true',
-            help='Delete all records at Cities Table and store new list of cities.',
+            help='delete all records at Cities Table and store new list of cities',
         )
 
     def exicute(self):
@@ -130,10 +130,9 @@ class FetchCities(BaseSerivce, FetchServiceMixin):
         cities = self.fetch()
         self.append_to_file(cities)
         logger.info(
-            f'Sucessfully fethed {CONFIG.cities_amount} cities. '
-            f'Look at {CONFIG.cities_file} to confirm results. You can make any changes'
-            ' and commit them by calling for `init_cities` with -O flag. '
-            'All cites fetched now will be added to database.'
+            f'Sucessfully fethed {CONFIG.cities_amount} cities and stored them at json'
+            'file. Go there to confirm results. You can make any changes and commit '
+            'them by calling for `init_cities` with -O flag. '
         )
 
         InitCities(predefined=cities).exicute()
@@ -161,9 +160,9 @@ class FetchCities(BaseSerivce, FetchServiceMixin):
 
     def append_to_file(self, cities: list[CitySchema]):
         if os.path.isfile(CONFIG.cities_file):
-            pass
-            # [TODO]
-            # raise FileExistsError()
+            logger.warning(
+                f'{CONFIG.cities_file} already exists. All data will be overriden. '
+            )
 
         with open(CONFIG.cities_file, 'w+', encoding='utf-8') as file:
             json.dump([city.dict() for city in cities], file)

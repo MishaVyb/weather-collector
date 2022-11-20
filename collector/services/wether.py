@@ -24,7 +24,7 @@ logger = init_logger(__name__)
 
 
 ########################################################################################
-# Fetch Weather
+# Weather Schemas
 ########################################################################################
 
 
@@ -55,6 +55,11 @@ class WetherMeasurementSchema(pydantic.BaseModel):
     "Main weather data. "
     dt: int
     "Time of data forecasted, Unix, UTC (timestamp). "
+
+########################################################################################
+# Fetch Weather
+########################################################################################
+
 
 
 class FetchWeather(BaseSerivce, DBSessionMixin, FetchServiceMixin):
@@ -153,13 +158,13 @@ class CollectWether(BaseSerivce):
             '--repeats',
             metavar='<amount>',
             type=int,
-            help='Collecting repeats amount. Default: infinity. ',
+            help='collecting repeats amount. Default: infinity',
         )
         parser.add_argument(
             '-i',
             '--initial',
             action='store_true',
-            help='Init cities before collecting. Usefull with -O flag. ',
+            help='init cities before collecting. Usefull with -O flag',
         )
 
     def exicute(self):
@@ -216,12 +221,12 @@ class ReportWeather(BaseSerivce, DBSessionMixin):
         parser.add_argument(
             '--average',
             action='store_true',
-            help='Report avarage temperature for all cities. ',
+            help='report avarage temperature for all cities',
         )
         parser.add_argument(
             '--latest',
             action='store_true',
-            help='Report latest measured temperature for all cities. ',
+            help='report latest measured temperature for all cities',
         )
 
     def exicute(self):
@@ -258,7 +263,7 @@ class ReportWeather(BaseSerivce, DBSessionMixin):
             report += (
                 '\n'
                 f'Average temperature at {city.name} is {avarage} C. '
-                f'({n_measure} measurements {first.measure_at} -> {last.measure_at})'
+                f'({n_measure} measurements {first.measure_at} ... {last.measure_at})'
             )
         return report
 
@@ -277,7 +282,7 @@ class ReportWeather(BaseSerivce, DBSessionMixin):
 
             report += (
                 '\n'
-                f'Temparature at {city.name} is {measure.temp} C. '
+                f'Last measured temperature at {city.name} is {measure.main.temp} C. '
                 f'({measure.measure_at})'
             )
         return report
