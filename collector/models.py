@@ -4,9 +4,9 @@ from typing import TypeAlias
 
 import sqlalchemy as db
 from sqlalchemy import orm, sql
-import sqlalchemy.dialects.sqlite as sqlite
 
 Base: TypeAlias = orm.declarative_base()  # type: ignore
+
 
 class BaseModel(Base):
     __abstract__ = True

@@ -1,24 +1,15 @@
 from __future__ import annotations
-from datetime import datetime
 
 from http import HTTPStatus
-import json
-import os
-from pprint import pformat
-from typing import Iterable, Type
+from typing import Type
 import pydantic
 
 import requests
 import argparse
-import logging
-import unicodedata
-import sqlalchemy as db
-import sqlalchemy.orm as orm
 
 from collector.configurations import CONFIG
 from collector.exeptions import ResponseError, ResponseSchemaError
 from collector.functools import init_logger
-from collector.models import CityModel, ExtraMeasurementDataModel, MeasurementModel
 
 
 logger = init_logger(__name__)
@@ -40,9 +31,9 @@ class BaseSerivce:
     def __init__(self, **kwargs) -> None:
         pass
 
-    @staticmethod
-    def get_all_services():
-        services = BaseSerivce.__subclasses__()
+    # @staticmethod
+    # def get_all_services():
+    #     services = BaseSerivce.__subclasses__()
 
     @staticmethod
     def get_service(*, command: str):
@@ -108,7 +99,3 @@ class FetchServiceMixin:
 
         return instance
 
-
-# class AsyncFetchServiceMixin:
-#     async def afetch(self) -> dict | list | pydantic.BaseModel:
-#         asyncio.run()

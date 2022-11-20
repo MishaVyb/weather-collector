@@ -45,8 +45,6 @@ class DBSessionMixin:
             return self.session.query(obj).delete()
         raise ValueError
 
-
-
     def save(self):
         self.session.commit()
         self.session.close()

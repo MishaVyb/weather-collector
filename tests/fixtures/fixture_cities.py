@@ -1,17 +1,14 @@
 import json
-import os
-from typing import Type
 import pytest
 
-import sqlalchemy as db
 import sqlalchemy.orm as orm
 from collector.functools import init_logger
 from collector import models
-from collector.session import Session as CollectorSession
 from collector.configurations import CollectorConfig
 
 
 logger = init_logger(__name__)
+
 
 @pytest.fixture
 def cities_list():
@@ -20,8 +17,9 @@ def cities_list():
         {'name': 'Istanbul'},
         {'name': 'Tokyo'},
         {'name': 'Moscow'},
-        {'name': 'Entebbe'}, # small African city
+        {'name': 'Entebbe'},  # small African city
     ]
+
 
 @pytest.fixture
 def broken_cities_file(config: CollectorConfig):
@@ -38,6 +36,7 @@ def cities_file(config: CollectorConfig, cities_list: list[dict]):
     with open(config.cities_file, 'w+', encoding='utf-8') as file:
         json.dump(cities_list, file)
     return cities_list
+
 
 @pytest.fixture
 def seed_cities_to_database(cities_list, session: orm.Session):

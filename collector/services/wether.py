@@ -1,32 +1,19 @@
 from __future__ import annotations
 from datetime import datetime
 
-from http import HTTPStatus
-import json
-import os
-from pprint import pformat
 import sys
 from time import sleep
-from typing import Iterable
 import pydantic
 
-import requests
 import argparse
-import logging
-import unicodedata
-import sqlalchemy as db
-import sqlalchemy.orm as orm
 
 from collector.configurations import CONFIG
 from collector.exeptions import (
     CollectorBaseExeption,
     NoDataError,
-    ResponseError,
-    ResponseSchemaError,
 )
 from collector.functools import init_logger
 from collector.models import (
-    BaseModel,
     CityModel,
     ExtraMeasurementDataModel,
     MeasurementModel,
@@ -40,7 +27,7 @@ logger = init_logger(__name__)
 
 
 ########################################################################################
-### Fetch Weather
+# Fetch Weather
 ########################################################################################
 
 
@@ -139,7 +126,7 @@ class FetchWeather(BaseSerivce, DBSessionMixin, FetchServiceMixin):
 
 
 ########################################################################################
-### Collect Weather
+# Collect Weather
 ########################################################################################
 
 
@@ -207,7 +194,7 @@ class CollectWether(BaseSerivce):
 
 
 ########################################################################################
-### Report Weather
+# Report Weather
 ########################################################################################
 
 

@@ -1,7 +1,5 @@
-import builtins
 import pydantic
 import pytest
-import sqlalchemy as db
 import sqlalchemy.orm as orm
 from collector.configurations import CONFIG, CollectorConfig
 from collector.exeptions import NoDataError
@@ -15,7 +13,6 @@ from collector.services.cities import (
     InitCities,
 )
 from collector.services.wether import CollectWether, FetchWeather, ReportWeather
-from collector.session import DBSessionMixin
 
 
 logger = init_logger(__name__)
@@ -25,7 +22,7 @@ logger = init_logger(__name__)
 class TestServices:
 
     ####################################################################################
-    ### Init Cities Service
+    # Init Cities Service
     ####################################################################################
 
     def test_init_cities_no_file_rises(self):
@@ -41,7 +38,7 @@ class TestServices:
         assert session.query(CityModel).count() == len(cities_file)
 
     ####################################################################################
-    ### Fetch Cities Service
+    # Fetch Cities Service
     ####################################################################################
 
     @pytest.mark.parametrize(
@@ -86,7 +83,7 @@ class TestServices:
         assert len(cities_from_file) == amount
 
     ####################################################################################
-    ### Fetch Coordinates Service
+    # Fetch Coordinates Service
     ####################################################################################
 
     def test_fetch_coordinates(self, seed_cities_to_database, session: orm.Session):
@@ -96,7 +93,7 @@ class TestServices:
             assert city.latitude and city.longitude
 
     ####################################################################################
-    ### Fetch Weather Service
+    # Fetch Weather Service
     ####################################################################################
 
     def test_fetch_weather_rises(self):
@@ -108,7 +105,7 @@ class TestServices:
         ...
 
     ####################################################################################
-    ### Collect Weather Service
+    # Collect Weather Service
     ####################################################################################
 
     def test_collect_weather(
@@ -137,7 +134,7 @@ class TestServices:
         ...
 
     ####################################################################################
-    ### Report Weather Service
+    # Report Weather Service
     ####################################################################################
 
     def test_repost_weather(self, seed_cities_to_database, session: orm.Session):

@@ -6,9 +6,7 @@ import sqlalchemy as db
 import sqlalchemy.orm as orm
 from collector.functools import init_logger
 from collector import models
-from collector.session import Session as CollectorSession
 from collector import session as session_module
-
 
 
 logger = init_logger(__name__)
@@ -75,9 +73,8 @@ def session(setup_database, clear_records, connection):
     )
     yield Session()
 
+
 @pytest.fixture
 def mock_session(monkeypatch: pytest.MonkeyPatch, session_class: Type[orm.Session]):
     logger.debug('mock_session fixture')
     monkeypatch.setattr(session_module, 'Session', session_class)
-
-

@@ -1,24 +1,16 @@
 from __future__ import annotations
-from datetime import datetime
 
-from http import HTTPStatus
 import json
 import os
-from pprint import pformat
-from typing import Iterable
 import pydantic
 
-import requests
 import argparse
-import logging
 import unicodedata
-import sqlalchemy as db
-import sqlalchemy.orm as orm
 
 from collector.configurations import CONFIG
-from collector.exeptions import NoDataError, ResponseError, ResponseSchemaError
+from collector.exeptions import NoDataError
 from collector.functools import init_logger
-from collector.models import CityModel, ExtraMeasurementDataModel, MeasurementModel
+from collector.models import CityModel
 from collector.services.base import BaseSerivce, FetchServiceMixin
 from collector.session import DBSessionMixin
 
@@ -27,7 +19,7 @@ logger = init_logger(__name__)
 
 
 ########################################################################################
-### Cities Schemas
+# Cities Schemas
 ########################################################################################
 
 
@@ -64,7 +56,7 @@ class CityCoordinatesSchema(pydantic.BaseModel):
 
 
 ########################################################################################
-### Init Cities
+# Init Cities
 ########################################################################################
 
 
@@ -116,7 +108,7 @@ class InitCities(BaseSerivce, DBSessionMixin):
 
 
 ########################################################################################
-### Fetch Cities
+# Fetch Cities
 ########################################################################################
 
 

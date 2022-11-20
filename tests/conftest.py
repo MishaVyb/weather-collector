@@ -1,8 +1,6 @@
 """
 Main config file for pytest.
 """
-import os
-import sys
 
 import pytest
 
