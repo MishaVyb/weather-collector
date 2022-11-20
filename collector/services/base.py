@@ -1,16 +1,15 @@
 from __future__ import annotations
 
+import argparse
 from http import HTTPStatus
 from typing import Type
-import pydantic
 
+import pydantic
 import requests
-import argparse
 
 from collector.configurations import CONFIG
 from collector.exeptions import ResponseError, ResponseSchemaError
 from collector.functools import init_logger
-
 
 logger = init_logger(__name__)
 
@@ -98,4 +97,3 @@ class FetchServiceMixin:
             raise ResponseSchemaError(e)
 
         return instance
-

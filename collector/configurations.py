@@ -1,4 +1,5 @@
 import pydantic
+
 from collector.functools import init_logger
 
 logger = init_logger(__name__)

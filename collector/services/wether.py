@@ -1,28 +1,24 @@
 from __future__ import annotations
-from datetime import datetime
-
-import sys
-from time import sleep
-import pydantic
 
 import argparse
+import sys
+from datetime import datetime
+from time import sleep
+
+import pydantic
 
 from collector.configurations import CONFIG
-from collector.exeptions import (
-    CollectorBaseExeption,
-    NoDataError,
-)
+from collector.exeptions import CollectorBaseExeption, NoDataError
 from collector.functools import init_logger
 from collector.models import (
     CityModel,
-    MeasurementModel,
-    MainWeatherDataModel,
     ExtraWeatherDataModel,
+    MainWeatherDataModel,
+    MeasurementModel,
 )
 from collector.services.base import BaseSerivce, FetchServiceMixin
 from collector.services.cities import FetchCities, FetchCoordinates, InitCities
 from collector.session import DBSessionMixin
-
 
 logger = init_logger(__name__)
 

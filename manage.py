@@ -1,7 +1,7 @@
 import argparse
 
-from collector.services import BaseSerivce
 from collector.functools import init_logger
+from collector.services import BaseSerivce
 
 logger = init_logger(__name__)
 

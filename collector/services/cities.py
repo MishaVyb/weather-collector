@@ -1,11 +1,11 @@
 from __future__ import annotations
 
+import argparse
 import json
 import os
-import pydantic
-
-import argparse
 import unicodedata
+
+import pydantic
 
 from collector.configurations import CONFIG
 from collector.exeptions import NoDataError
@@ -13,7 +13,6 @@ from collector.functools import init_logger
 from collector.models import CityModel
 from collector.services.base import BaseSerivce, FetchServiceMixin
 from collector.session import DBSessionMixin
-
 
 logger = init_logger(__name__)
 

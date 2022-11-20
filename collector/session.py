@@ -1,13 +1,13 @@
 from __future__ import annotations
-from typing import Type
-import pydantic
 
+from typing import Type
+
+import pydantic
 import sqlalchemy as db
 import sqlalchemy.orm as orm
+
 from collector.functools import init_logger
-
 from collector.models import BaseModel
-
 
 logger = init_logger(__name__)
 engine = db.create_engine('sqlite:///db.sqlite3', future=True)

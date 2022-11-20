@@ -1,4 +1,5 @@
 from __future__ import annotations
+
 from datetime import datetime
 from typing import TypeAlias
 
@@ -41,7 +42,7 @@ class CityModel(BaseModel):
 
     measurements: list[MeasurementModel] = orm.relationship(
         'MeasurementModel',
-        #back_populates='city',
+        # back_populates='city',
         backref='city',
         cascade='all, delete-orphan',
     )
@@ -65,6 +66,7 @@ class MeasurementModel(BaseModel):
     We may describe other tables to store all toher data in relational (SQL) way later,
     if we will need it.
     """
+
     __tablename__ = 'weather_measurement'
 
     # city: CityModel = orm.relationship('CityModel', back='measurements')
@@ -72,7 +74,6 @@ class MeasurementModel(BaseModel):
 
     measure_at: datetime = db.Column(db.DateTime())
     "Time of data forecasted. UTC. Do not confuse with base model `created_at` field."
-
 
     # Weather fields as one-to-one relations to weather information:
     main: MainWeatherDataModel = orm.relationship(
@@ -89,7 +90,6 @@ class MeasurementModel(BaseModel):
         backref='measurement',
         cascade='all, delete-orphan',
     )
-
 
 
 class MainWeatherDataModel(BaseModel):
