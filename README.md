@@ -2,8 +2,8 @@
 <!-- PROJECT LOGO -->
 <br />
 <div align="center">
-  <a href="https://github.com/github_username/repo_name">
-    <img src="https://user-images.githubusercontent.com/103563736/202896555-7c74c5e9-2807-4e35-a64a-b018bbc2d497.png" alt="Logo">
+  <a href="https://github.com/MishaVyb/weather-collector">
+    <img src="https://user-images.githubusercontent.com/103563736/202907625-a4942bed-c096-40eb-9550-b6542878af74.png" alt="Logo">
   </a>
 
 <h3 align="center">Weather Collector</h3>
@@ -33,6 +33,7 @@
     </li>
     <li><a href="#usage">Usage</a></li>
     <li><a href="#explanations">Explanations</a></li>
+    <li><a href="#appreciations">Appreciations</a></li>
     <li><a href="#contact">Contact</a></li>
   </ol>
 </details>
@@ -40,10 +41,10 @@
 
 
 ## Features
-- Fetching list of world's largest cities from third-party API.
+- Fetching world's largest cities from third-party API.
 - Fetching weather for provided cities from third-party API and store data into database.
 - Easy to configurate cities at `cities.json` file. Only name is required.
-- Report last and average temperature for every cities.
+- Making report for last and average temperature for every city.
 
 ## Built With
 ![](https://img.shields.io/badge/python-3.10.4-blue)
@@ -93,12 +94,12 @@
     ```sh
     $ python3 manage.py
     ```
-    Note. It is default program exicution and it equls to:
+    **Note**. That command runs default package execution and equals to:
     ```sh
     $ python3 manage.py collect --initial
     ```
 
-    For the beginning, collector looks for `cites.json` file where list of cites described.
+    For the beginning, collector looks for `cites.json` file where list of cities described.
     ```json
     [
         {"name": "Moscow"},
@@ -106,50 +107,76 @@
     ]
     ```
 
-    If file does not exist, collector getting the most populated cities from GeoDB API.
+    If that file does not exist, collector getting the most populated cities from GeoDB API.
     > WARNING! <br>
-    > Wether Collector do not guarantee that recived cites is a *real* the most populated cites on the Earth at current moment. It's better to manualy fill `cities.json` file.
+    > Weather Collector do **not** guarantee that received cites is a *real* the most populated cities on the Earth at current moment. It's better to manually fill `cities.json` file.
 
-    After that collector begin collecting weather from Open Weather API every hour and store all data into database.
+    After that collector begin collecting weather every hour and store all data into database.
 
 2. Change tracked cities.
-    Describe cities at `cites.json` file and call for `InitService`.
+
+    Describe cities at `cites.json` file and call for `InitCities` service.
     ```sh
     $ python3 manage.py init_cites
     ```
-    By defaul cites will be appended to already handled ones. If you want to override existing, use `--override` flag. It will delete all already existing records in city table before.
+    By default cites will be appended to already handled ones. If you want to override existing, use `--override` flag. It will delete all already existing records in city table before.
     ```sh
     $ python3 manage.py init_cites --override
     ```
 
-3. Get report.
+3. Get weather report.
     ```sh
     $ python3 manage.py report
     $ python3 manage.py report --average
     $ python3 manage.py report --latest
     ```
+
+4. More options.
+    ```sh
+    $ python3 manage.py --help
+    ```
+
+
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
 
 ## Explanation
 
-1. Table Structure.
+1. Database Structure.
 
-    Open Weather API provides a lot of information about current city weather. Depending on location and current weather situation some fields could appear some other could not. For that situation we decided to store all root fields in separate tables.
+    ![Untitled (1)](https://user-images.githubusercontent.com/103563736/202909727-66f6490c-a464-4fe8-8582-e9bd9aa1ed3a.jpg)
 
-    Why `main`? <br>
+    `CityModel` <br>
+    Contains cities which weather collecting for.
+
+    `MeasurementModel`<br>
+    For every weather measurement (API request) associated with the city.
+
+    Open Weather API provides a lot of information about current city weather. Depending on location and current weather situation, some fields could appear some other could not. For that situation we decided to store all response root fields in separate tables.
+
+    Why `MainWeatherDataModel` table? <br>
     The basic reason for collecting weather is understanding how to cool down company's servers. Therefore, we parsing and store `main` field that contains current temperature. All other data storing as json at `ExtraMeasurementDataModel` for any future purposes.
 
     We may describe other tables to store all the data in relational (SQL) way later, if we will need it.
 
-2. Restrictions.
+2. Restrictions. <br>
+    When executing services, all http requests runs synchronously. It takes a lot of time and hold processing execution. It's better to make them in async way to reach more speed.
 
-    For now all http requests runs synchronously. It takes a lot of time and hold processing execution. It's better to make them in async way to reach more speed.
+    In developing for now.
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
 
+## Appreciations
+
+Great thanks for third-party API services used to handle this package.
+- [GeoDB](http://geodb-cities-api.wirefreethought.com/) - for presenting list of the most populated cities.
+- [Open Weather](https://openweathermap.org/) - for presenting cities location and their weather.
+
 ## Contacts
 
-Misha Vybornyy:
+Misha Vybornyy
 
+[![Telegram Badge](https://img.shields.io/badge/-mishaviborniy-blue?style=social&logo=telegram&link=https://t.me/mishaviborniy)](https://t.me/mishaviborniy)<br>
 [![Gmail Badge](https://img.shields.io/badge/-misha.vybornyy@gmail.com-c14438?style=flat&logo=Gmail&logoColor=white&link=mailto:vbrn.mv@gmail.com)](mailto:vbrn.mv@gmail.com)
-[![Telegram Badge](https://img.shields.io/badge/-mishaviborniy-blue?style=social&logo=telegram&link=https://t.me/mishaviborniy)](https://t.me/mishaviborniy) <p align='left'>
+<p align='left'>
+
+<p align="right">(<a href="#readme-top">back to top</a>)</p>
