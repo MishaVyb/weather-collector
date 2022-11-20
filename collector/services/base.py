@@ -44,7 +44,6 @@ class BaseSerivce:
     def get_all_services():
         services = BaseSerivce.__subclasses__()
 
-
     @staticmethod
     def get_service(*, command: str):
         """
@@ -108,3 +107,8 @@ class FetchServiceMixin:
             raise ResponseSchemaError(e)
 
         return instance
+
+
+# class AsyncFetchServiceMixin:
+#     async def afetch(self) -> dict | list | pydantic.BaseModel:
+#         asyncio.run()

@@ -364,7 +364,8 @@ venv*
 cities.json
 
 # tmp files
-Untitled*
-untitled*
+*Untitled*
+*untitled*
+*tmp*
 
 

@@ -56,8 +56,10 @@ class CityCoordinatesSchema(pydantic.BaseModel):
     name: str
     lat: float
     lon: float
-    # country: str | None
-    # state: str | None
+    country: str | None
+    state: str | None
+
+    # [FIXME] parsing response falls down because of unicode symbols
     # local_names: list[str] | None
 
 
@@ -89,11 +91,11 @@ class InitCities(BaseSerivce, DBSessionMixin):
     @classmethod
     def add_argument(cls, parser: argparse.ArgumentParser):
         parser.add_argument(
-                '-O',
-                '--override',
-                action='store_true',
-                help='Delete all records at Cities Table and store new list of cities.',
-            )
+            '-O',
+            '--override',
+            action='store_true',
+            help='Delete all records at Cities Table and store new list of cities.',
+        )
 
     def exicute(self):
         super().exicute()
@@ -104,6 +106,7 @@ class InitCities(BaseSerivce, DBSessionMixin):
 
         self.create_from_schema(CityModel, *cities)
         self.save()
+        logger.info(f'Add new {len(cities)} records to {CityModel}')
 
     def load_from_file(self):
         try:
@@ -121,6 +124,7 @@ class FetchCities(BaseSerivce, FetchServiceMixin):
     """
     Fetch cities list from GeoDB API, save them to JSON file for future custom
     configuration and call for `InitCities` service to store all new cities at database.
+
     Endpoint detail information: http://geodb-cities-api.wirefreethought.com/
     """
 
@@ -134,6 +138,13 @@ class FetchCities(BaseSerivce, FetchServiceMixin):
         super().exicute()
         cities = self.fetch()
         self.append_to_file(cities)
+        logger.info(
+            f'Sucessfully fethed {CONFIG.cities_amount} cities. '
+            f'Look at {CONFIG.cities_file} to confirm results. You can make any changes'
+            ' and commit them by calling for `init_cities` with -O flag. '
+            'All cites fetched now will be added to database.'
+        )
+
         InitCities(predefined=cities).exicute()
 
     def fetch(self):
@@ -141,6 +152,7 @@ class FetchCities(BaseSerivce, FetchServiceMixin):
         # We are using GeoDB API Service under FREE plan provided at specified url.
         # Unfortunately, in that case limit params is restricted up to 10.
         # And for insntace we need make request 5 times to get 50 cityes.
+        CONFIG.cities_amount
         restricted_limit = 10
         self.params['limit'] = restricted_limit
         cities: list[CitySchema] = []
@@ -149,7 +161,7 @@ class FetchCities(BaseSerivce, FetchServiceMixin):
             offset = i * restricted_limit
             self.params['offset'] = offset
 
-            logger.info(f'Fetching cities: {offset=} limit={restricted_limit}')
+            logger.info(f'Fetching cities: {offset=}')
 
             # `data` is a core field at response json with list of cities
             cities += super().fetch().data
@@ -199,6 +211,16 @@ class FetchCoordinates(BaseSerivce, DBSessionMixin, FetchServiceMixin):
 
     def exicute(self):
         geo_list: list[CityCoordinatesSchema] = self.fetch()
+        if not geo_list:
+            raise NoDataError(
+                'Getting coordinates failed. '
+                f'Geocoding has no information about {self.city}. '
+            )
+        if len(geo_list) > 1:
+            logger.warning(
+                f'Geocoding has many records for {self.city}. Taking the first.'
+            )
+
         coordinates = geo_list[0]
         self.city.latitude = coordinates.lat
         self.city.longitude = coordinates.lon

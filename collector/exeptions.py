@@ -18,4 +18,4 @@ class ResponseSchemaError(ResponseError):
 
 
 class NoDataError(CollectorBaseExeption):
-    message = 'No data privided.'
+    message = 'No data privided. '

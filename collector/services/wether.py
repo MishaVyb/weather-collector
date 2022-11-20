@@ -18,7 +18,12 @@ import sqlalchemy as db
 import sqlalchemy.orm as orm
 
 from collector.configurations import CONFIG
-from collector.exeptions import NoDataError, ResponseError, ResponseSchemaError
+from collector.exeptions import (
+    CollectorBaseExeption,
+    NoDataError,
+    ResponseError,
+    ResponseSchemaError,
+)
 from collector.functools import init_logger
 from collector.models import (
     BaseModel,
@@ -79,10 +84,6 @@ class FetchWeather(BaseSerivce, DBSessionMixin, FetchServiceMixin):
     description = 'Fetch wether for cities and store data into DB. '
     command = 'fetch_weather'
     url = 'https://api.openweathermap.org/data/2.5/weather'
-    # params = {
-    #     "appid": CONFIG.open_wether_key,
-    #     "units": "metric",
-    # }
     schema = WetherMeasurementSchema
 
     def __init__(self, **kwargs) -> None:
@@ -101,7 +102,11 @@ class FetchWeather(BaseSerivce, DBSessionMixin, FetchServiceMixin):
     def exicute(self):
         for city in self.cities:
             if not all([city.longitude, city.latitude]):
-                FetchCoordinates(city).exicute()
+                try:
+                    FetchCoordinates(city).exicute()
+                except NoDataError as e:
+                    logger.warning(f'Can not get wether for {city}: {e}. Continue. ')
+                    continue
 
             measure, extra = self.fetch(city)
             self.store(city, measure, extra)
@@ -123,7 +128,6 @@ class FetchWeather(BaseSerivce, DBSessionMixin, FetchServiceMixin):
         return measur, extra
 
     def store(self, city: CityModel, measure: WetherMeasurementSchema, extra: dict):
-        # logger.info('Add weather measurements to DB Session. ')u
         self.create(
             MeasurementModel(
                 city=city,
@@ -143,22 +147,63 @@ class CollectWether(BaseSerivce):
     command = 'collect'
     delay = CONFIG.collect_weather_delay
 
-    def __init__(self, **kwargs) -> None:
+    def __init__(
+        self, *, repeats: int | None = None, initial: bool = False, **kwargs
+    ) -> None:
         self.counter = 0
+        self.repeats = repeats
+
+        if initial:
+            try:
+                InitCities().exicute()
+            except NoDataError as e:
+                logger.warning(f'{e}. Handling by calling for {FetchCities()}.')
+                FetchCities().exicute()
+
         super().__init__(**kwargs)
+
+    @classmethod
+    def add_argument(cls, parser: argparse.ArgumentParser):
+        parser.add_argument(
+            '-R',
+            '--repeats',
+            type=int,
+            help='Collecting repeats amount. Default: infinity. ',
+        )
+        parser.add_argument(
+            '-I',
+            '--initial',
+            help='Init cities before collecting. Usefull with -O flag. ',
+        )
 
     def exicute(self):
         while True:
-            logger.info(f'\nStarting collecting wether ({self.counter}). ')
+            logger.info(f'\n\n\t Starting collecting wether ({self.counter}). ')
 
-            FetchWeather().exicute()
+            try:
+                FetchWeather().exicute()
+                logger.info('Collected successfuly. ')
+            except CollectorBaseExeption as e:
+                # logging all custom exeptions and continue collecting
+                #
+                # [NOTE]
+                # Custom exeptions raised when response is broken or when db has not
+                # neccassery data. While this thread will be sliping, the reason of
+                # error could be changed by others. Therefore, we won't stop collecting.
+                logger.error(e)
 
-            logger.info(
-                f'Collected successfuly. Next collecting runs in {self.delay} seconds.'
-                ' Sleeping...'
-            )
-            self.counter += 1
+            finally:
+                self.counter += 1
+                if self.repeats and self.counter >= self.repeats:
+                    break
+
+                logger.info(
+                    f'Next collecting runs in {self.delay} seconds. Sleeping...'
+                )
+
             sleep(self.delay)
+
+        logger.info('End of collecting. ')
 
 
 ########################################################################################
@@ -250,5 +295,3 @@ class ReportWeather(BaseSerivce, DBSessionMixin):
                 f'({measure.measure_at})'
             )
         return report
-
-    # report_methods = (get_basic, get_avarage, get_latest)

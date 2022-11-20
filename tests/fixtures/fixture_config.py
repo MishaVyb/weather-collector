@@ -1,3 +1,4 @@
+import os
 from typing import Type
 import pytest
 
@@ -6,14 +7,33 @@ import sqlalchemy.orm as orm
 from collector.functools import init_logger
 from collector import models
 from collector.session import Session as CollectorSession
-from collector import configurations
+from collector.configurations import CollectorConfig, CONFIG
 
 
 logger = init_logger(__name__)
 
+TEST_CITIES_FILE = os.path.join(os.path.dirname(__file__), 'testcities.json')
 
 
 @pytest.fixture
-def mock_config(monkeypatch):
-    monkeypatch.setattr(configurations, 'CONFIG', configurations.CollectorConfig())
+def config():
+    return CollectorConfig(
+        debug=True,
+        cities_amount=20,
+        cities_file=TEST_CITIES_FILE,
+        collect_weather_delay=0.5,
+    )
 
+
+@pytest.fixture
+def mock_config(monkeypatch: pytest.MonkeyPatch, config: CollectorConfig):
+    cities = config.cities_file
+    if os.path.isfile(cities):
+        logger.warning(f'Test begins with already existing {cities}. ')
+
+    for field in CollectorConfig.__fields__:
+        monkeypatch.setattr(CONFIG, field, getattr(config, field))
+    yield
+
+    if os.path.isfile(cities):
+        os.remove(cities)

@@ -27,11 +27,11 @@ def main():
     logger.debug(service_class)
 
     service = service_class(**dict(args._get_kwargs()))
-    try:
-        service.exicute()
-    except CollectorBaseExeption as e:
-        # logging all custom exeptions and continue processing
-        logger.error(e)
+    # try:
+    service.exicute()
+    # except CollectorBaseExeption as e:
+    #     # logging all custom exeptions and continue processing
+    #     logger.error(e)
 
 if __name__ == '__main__':
     main()

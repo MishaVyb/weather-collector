@@ -9,6 +9,7 @@ import pytest
 pytest_plugins = [
     'tests.fixtures.fixture_db',
     'tests.fixtures.fixture_config',
+    'tests.fixtures.fixture_cities',
 ]
 
 
