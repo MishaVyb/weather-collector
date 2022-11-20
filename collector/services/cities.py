@@ -180,7 +180,7 @@ class FetchCoordinates(BaseSerivce, DBSessionMixin, FetchServiceMixin):
     Endpont detail information: https://openweathermap.org/api/geocoding-api
     """
 
-    description = 'Fetch wether for cities and store data into DB. '
+    description = 'Fetch weather for cities and store data into DB. '
     command = 'fetch_coordinates'
     url = 'http://api.openweathermap.org/geo/1.0/direct'
     schema = list[CityCoordinatesSchema]

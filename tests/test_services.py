@@ -12,7 +12,7 @@ from collector.services.cities import (
     FetchCoordinates,
     InitCities,
 )
-from collector.services.wether import CollectWether, FetchWeather, ReportWeather
+from collector.services.weather import CollectWether, FetchWeather, ReportWeather
 
 
 logger = init_logger(__name__)

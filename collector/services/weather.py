@@ -44,7 +44,7 @@ class MainWetherSchema(pydantic.BaseModel):
     grnd_level: int | None
 
 
-class WetherMeasurementSchema(pydantic.BaseModel):
+class WeatherMeasurementSchema(pydantic.BaseModel):
     """
     Response data from Open Weather API contains several fields. We only ensure to have
     `main` field and `dt` field. Other is optional and will be stored at extra data
@@ -64,16 +64,16 @@ class WetherMeasurementSchema(pydantic.BaseModel):
 
 class FetchWeather(BaseSerivce, DBSessionMixin, FetchServiceMixin):
     """
-    Fetch wether for cities and store data into DB.
-    By default fetching wether for all cities from DB.
+    Fetch weather for cities and store data into DB.
+    By default fetching weather for all cities from DB.
 
     Endpont detail information: https://openweathermap.org/current
     """
 
-    description = 'Fetch wether for cities and store data into DB. '
+    description = 'Fetch weather for cities and store data into DB. '
     command = 'fetch_weather'
     url = 'https://api.openweathermap.org/data/2.5/weather'
-    schema = WetherMeasurementSchema
+    schema = WeatherMeasurementSchema
 
     def __init__(self, **kwargs) -> None:
 
@@ -94,7 +94,7 @@ class FetchWeather(BaseSerivce, DBSessionMixin, FetchServiceMixin):
                 try:
                     FetchCoordinates(city).exicute()
                 except NoDataError as e:
-                    logger.warning(f'Can not get wether for {city}: {e}. Continue. ')
+                    logger.warning(f'Can not get weather for {city}: {e}. Continue. ')
                     continue
 
             measure, extra = self.fetch(city)
@@ -116,7 +116,7 @@ class FetchWeather(BaseSerivce, DBSessionMixin, FetchServiceMixin):
 
         return measure, extra
 
-    def store(self, city: CityModel, measure: WetherMeasurementSchema, extra: dict):
+    def store(self, city: CityModel, measure: WeatherMeasurementSchema, extra: dict):
         self.create(
             MeasurementModel(
                 city=city,
@@ -169,7 +169,7 @@ class CollectWether(BaseSerivce):
 
     def exicute(self):
         while True:
-            logger.info(f'\n\n\t Starting collecting wether ({self.counter}). ')
+            logger.info(f'\n\n\t Starting collecting weather ({self.counter}). ')
 
             try:
                 FetchWeather().exicute()
@@ -241,7 +241,7 @@ class ReportWeather(BaseSerivce, DBSessionMixin):
         n_measure = self.query(MeasurementModel).count()
         return (
             '\n'
-            f'Collector strores {n_measure} weather measerements for {n_cites} cities.'
+            f'Collector storing {n_measure} weather measerements for {n_cites} cities.'
         )
 
     def get_avarage(self):

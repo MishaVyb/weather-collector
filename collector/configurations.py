@@ -15,7 +15,7 @@ class CollectorConfig(pydantic.BaseSettings):
     "File to descibe cities collector fetching weather for. "
 
     collect_weather_delay: float = 1 * 60 * 60 if not debug else 2
-    "Delay between every wether measurement. Seconds. Dafault: 1 hour. "
+    "Delay between every weather measurement. Seconds. Dafault: 1 hour. "
 
     open_wether_key: str = 'deecec0236349da5eb1666916ba49e8f'
     """

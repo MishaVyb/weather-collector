@@ -57,7 +57,7 @@ class MeasurementModel(BaseModel):
     on location and current weather situation some fields could appear some other could
     not. For that situation we decided to store all root fields in separate tables.
 
-    Why `main`?
+    Why `MainWeatherDataModel`?
     The basic reason for collecting weather is understanding how to cool down company's
     servers. Therefore, we parsing and store `main` field that contains current
     temperature. All other data storing as json at `ExtraMeasurementDataModel` for any
@@ -72,17 +72,21 @@ class MeasurementModel(BaseModel):
     # city: CityModel = orm.relationship('CityModel', back='measurements')
     city_id: int = db.Column(db.Integer, db.ForeignKey("city.id"), nullable=False)
 
-    measure_at: datetime = db.Column(db.DateTime())
+    measure_at: datetime = db.Column(db.DateTime(), nullable=False)
     "Time of data forecasted. UTC. Do not confuse with base model `created_at` field."
 
-    # Weather fields as one-to-one relations to weather information:
     main: MainWeatherDataModel = orm.relationship(
         'MainWeatherDataModel',
         uselist=False,
         backref='measurement',
         cascade='all, delete-orphan',
     )
+
+    # [NOTE]
+    # Other fields can be handled here as one-to-one relation, if the reason is appear
+    # in a future.
     ...
+
 
     extra: ExtraWeatherDataModel = orm.relationship(
         'ExtraWeatherDataModel',
@@ -132,7 +136,7 @@ class MainWeatherDataModel(BaseModel):
 
 class ExtraWeatherDataModel(BaseModel):
     """
-    Additional data from wether measurement.
+    Additional data from weather measurement.
     """
 
     __tablename__ = 'extra_weather_data'
