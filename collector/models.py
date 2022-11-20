@@ -41,13 +41,8 @@ class CityModel(BaseModel):
 
     measurements: list[MeasurementModel] = orm.relationship(
         'MeasurementModel',
-        back_populates='city',
-        cascade='all, delete-orphan',
-    )
-    extra_measurements: list[ExtraMeasurementDataModel] = orm.relationship(
-        'ExtraMeasurementDataModel',
-        uselist=False,
-        back_populates='city',
+        #back_populates='city',
+        backref='city',
         cascade='all, delete-orphan',
     )
 
@@ -57,22 +52,54 @@ class CityModel(BaseModel):
 
 class MeasurementModel(BaseModel):
     """
-    Main data from wether measurement.
+    Open Weather API provides a lot of information about current city weather.
+    Depending on locating and current weather situation some fields could be appear some
+    other could not. For that situation we decided to store all root fields in seperate
+    tables.
 
-    Open Weather API provides a lot of information about current weather at the city.
-    We parsing and store in seperated fields only data from `main` field and storing
-    `dt` (`measure_at`) value as it is important data also.
+    Why `main`?
+    The basic reason for collecting weather is understanding how to cool our servers.
+    Therefore, we parsing and store `main` field that contains current teperature. All
+    other data storing as json at `ExtraMeasurementDataModel` for any future porpuses.
 
-    All other data storing as json at `ExtraMeasurementDataModel` for future porpuses.
+    We may describe other tables to store all toher data in relational (SQL) way later,
+    if we will need it.
     """
-
     __tablename__ = 'weather_measurement'
 
-    city: CityModel = orm.relationship('CityModel', back_populates='measurements')
+    # city: CityModel = orm.relationship('CityModel', back='measurements')
     city_id: int = db.Column(db.Integer, db.ForeignKey("city.id"), nullable=False)
 
     measure_at: datetime = db.Column(db.DateTime())
-    "Time of data forecasted. UTC. "
+    "Time of data forecasted. UTC. Do not confuse with base model `created_at` field."
+
+
+    # Weather fields as one-to-one relations to weather information:
+    main: MainWeatherDataModel = orm.relationship(
+        'MainWeatherDataModel',
+        uselist=False,
+        backref='measurement',
+        cascade='all, delete-orphan',
+    )
+    ...
+
+    extra: ExtraWeatherDataModel = orm.relationship(
+        'ExtraWeatherDataModel',
+        uselist=False,
+        backref='measurement',
+        cascade='all, delete-orphan',
+    )
+
+
+
+class MainWeatherDataModel(BaseModel):
+    """
+    Data at `main` field from measurement response.
+    """
+
+    __tablename__ = 'main_weather_measurement'
+
+    measurement_id = db.Column(db.Integer, db.ForeignKey('weather_measurement.id'))
 
     temp: float = db.Column(db.Float())
     "Temperature. Celsius."
@@ -103,13 +130,12 @@ class MeasurementModel(BaseModel):
     "Atmospheric pressure on the ground level. hPa."
 
 
-class ExtraMeasurementDataModel(BaseModel):
+class ExtraWeatherDataModel(BaseModel):
     """
     Additional data from wether measurement.
     """
 
-    __tablename__ = 'extra_weather_measurement_data'
+    __tablename__ = 'extra_weather_data'
 
-    city: CityModel = orm.relationship('CityModel', back_populates='extra_measurements')
-    city_id: int = db.Column(db.Integer, db.ForeignKey('city.id'), nullable=False)
+    measurement_id = db.Column(db.Integer, db.ForeignKey('weather_measurement.id'))
     data: dict = db.Column(db.JSON())

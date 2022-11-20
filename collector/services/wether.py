@@ -15,8 +15,9 @@ from collector.exeptions import (
 from collector.functools import init_logger
 from collector.models import (
     CityModel,
-    ExtraMeasurementDataModel,
     MeasurementModel,
+    MainWeatherDataModel,
+    ExtraWeatherDataModel,
 )
 from collector.services.base import BaseSerivce, FetchServiceMixin
 from collector.services.cities import FetchCities, FetchCoordinates, InitCities
@@ -34,7 +35,7 @@ logger = init_logger(__name__)
 class MainWetherSchema(pydantic.BaseModel):
     """
     Schema for `main` field from Open Weather response. For more information see
-    `MeasurementModel` where we store all these values.
+    `MainWeatherDataModel` where we store all these values.
     """
 
     temp: float
@@ -106,22 +107,22 @@ class FetchWeather(BaseSerivce, DBSessionMixin, FetchServiceMixin):
         self.params['lat'] = str(city.latitude)
         self.params['lon'] = str(city.longitude)
 
-        measur = super().fetch()
+        measure = super().fetch()
 
         extra: dict = self.response.json()
         for field in self.schema.__fields__:
             extra.pop(field)
 
-        return measur, extra
+        return measure, extra
 
     def store(self, city: CityModel, measure: WetherMeasurementSchema, extra: dict):
         self.create(
             MeasurementModel(
                 city=city,
                 measure_at=datetime.utcfromtimestamp(measure.dt),
-                **measure.main.dict(),
-            ),
-            ExtraMeasurementDataModel(city=city, data=extra),
+                main=MainWeatherDataModel(**measure.main.dict()),
+                extra=ExtraWeatherDataModel(data=extra),
+            )
         )
 
 
@@ -142,24 +143,26 @@ class CollectWether(BaseSerivce):
 
         if initial:
             try:
-                InitCities().exicute()
+                InitCities(**kwargs).exicute()
             except NoDataError as e:
                 logger.warning(f'{e}. Handling by calling for {FetchCities()}.')
-                FetchCities().exicute()
+                FetchCities(**kwargs).exicute()
 
         super().__init__(**kwargs)
 
     @classmethod
     def add_argument(cls, parser: argparse.ArgumentParser):
         parser.add_argument(
-            '-R',
+            '-r',
             '--repeats',
+            metavar='<amount>',
             type=int,
             help='Collecting repeats amount. Default: infinity. ',
         )
         parser.add_argument(
-            '-I',
+            '-i',
             '--initial',
+            action='store_true',
             help='Init cities before collecting. Usefull with -O flag. ',
         )
 
@@ -245,8 +248,8 @@ class ReportWeather(BaseSerivce, DBSessionMixin):
         cites: list[CityModel] = self.query(CityModel).all()
         for city in cites:
             measurements: list[MeasurementModel] = (
-                self.query(MeasurementModel).filter(MeasurementModel.city_id == city.id)
-                # .order_by(MeasurementModel.measure_at)
+                self.query(MeasurementModel)
+                .filter(MeasurementModel.city_id == city.id)
                 .all()
             )
             if not measurements:
@@ -255,7 +258,7 @@ class ReportWeather(BaseSerivce, DBSessionMixin):
             n_measure = len(measurements)
             first = measurements[0]
             last = measurements[-1]
-            avarage = sum([measure.temp for measure in measurements]) / n_measure
+            avarage = sum([measure.main.temp for measure in measurements]) / n_measure
             report += (
                 '\n'
                 f'Average temperature at {city.name} is {avarage} C. '

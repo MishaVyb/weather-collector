@@ -48,13 +48,20 @@ def clear_records(setup_database, connection):
     cleaned_models: list[Type[models.BaseModel]] = [
         models.CityModel,
         models.MeasurementModel,
-        models.ExtraMeasurementDataModel,
+        models.MainWeatherDataModel,
+        models.ExtraWeatherDataModel,
     ]
 
     Session: Type[orm.Session] = orm.sessionmaker(bind=connection)
     session = Session()
     for model in cleaned_models:
-        session.query(model).delete()
+
+        try:
+            session.query(model).delete()
+        except Exception as e:
+            logger.error(e)
+            continue
+
     session.close()
 
 

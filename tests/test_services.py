@@ -96,7 +96,7 @@ class TestServices:
     # Fetch Weather Service
     ####################################################################################
 
-    def test_fetch_weather_rises(self):
+    def test_fetch_weathe_rises(self):
         with pytest.raises(NoDataError):
             FetchWeather()
 
