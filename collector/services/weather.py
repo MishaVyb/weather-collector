@@ -30,8 +30,9 @@ logger = init_logger(__name__)
 
 class MainWetherSchema(pydantic.BaseModel):
     """
-    Schema for `main` field from Open Weather response. For more information see
-    `MainWeatherDataModel` where we store all these values.
+    Schema for parsing `main` field from Open Weather response.
+
+    For more information see `MainWeatherDataModel` where we store all these values.
     """
 
     temp: float
@@ -46,26 +47,28 @@ class MainWetherSchema(pydantic.BaseModel):
 
 class WeatherMeasurementSchema(pydantic.BaseModel):
     """
-    Response data from Open Weather API contains several fields. We only ensure to have
-    `main` field and `dt` field. Other is optional and will be stored at extra data
-    table.
+    Schema for parsing data from Open Weather API. We only ensure to have `main` field
+    and `dt` field. Other is optional and will be stored at extra data table.
+
+    For more information see `MeasurementModel` where we store all these values.
     """
 
     main: MainWetherSchema
-    "Main weather data. "
     dt: int
-    "Time of data forecasted, Unix, UTC (timestamp). "
+    "Time of data forecasted, Unix, UTC (timestamp). `measure_at` field at model."
+
 
 ########################################################################################
-# Fetch Weather
+# Fetch Weather Service
 ########################################################################################
 
 
-
-class FetchWeather(BaseSerivce, DBSessionMixin, FetchServiceMixin):
+class FetchWeather(
+    BaseSerivce, DBSessionMixin, FetchServiceMixin[WeatherMeasurementSchema]
+):
     """
-    Fetch weather for cities and store data into DB.
-    By default fetching weather for all cities from DB.
+    Fetch weather for cities and store data into database.
+    By default fetching weather for all cities from database.
 
     Endpont detail information: https://openweathermap.org/current
     """
@@ -89,6 +92,7 @@ class FetchWeather(BaseSerivce, DBSessionMixin, FetchServiceMixin):
             )
 
     def exicute(self):
+        super().exicute()
         for city in self.cities:
             if not all([city.longitude, city.latitude]):
                 try:
@@ -128,7 +132,7 @@ class FetchWeather(BaseSerivce, DBSessionMixin, FetchServiceMixin):
 
 
 ########################################################################################
-# Collect Weather
+# Collect Weather Service
 ########################################################################################
 
 
@@ -198,7 +202,7 @@ class CollectWether(BaseSerivce):
 
 
 ########################################################################################
-# Report Weather
+# Report Weather Service
 ########################################################################################
 
 

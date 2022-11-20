@@ -351,6 +351,7 @@ MigrationBackup/
 
 # venv
 venv*
+.env
 
 # macOS system files
 .DS_Store

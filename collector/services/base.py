@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import argparse
 from http import HTTPStatus
-from typing import Type
+from typing import Generic, Iterable, Type, TypeVar
 
 import pydantic
 import requests
@@ -69,24 +69,32 @@ class BaseSerivce:
         return f'<{self.__class__.__name__}>'
 
 
-class FetchServiceMixin:
+_SchemaType = TypeVar('_SchemaType', bound=pydantic.BaseModel | Iterable)
+"""
+Bounded TypeVar for Generic classes that takes any subtype of pydantic.BaseModel class.
+
+[NOTE]
+Also bound to Iterable, because JSON response could be a `list[pydantic.BaseModel]`.
+"""
+
+class FetchServiceMixin(Generic[_SchemaType]):
     url: str = ''
     params: dict = {
         "appid": CONFIG.open_wether_key,
         "units": "metric",
     }
-    schema: Type[pydantic.BaseModel] | None = None
-    "Pydantic Model to parse response JSON data."
+    schema: Type[_SchemaType]
+    "Pydantic Model to parse response JSON data. Must be defined at inhereted classes. "
 
     def exicute(self):
         self.fetch()
 
-    def fetch(self) -> dict | list | pydantic.BaseModel:
+    def fetch(self) -> _SchemaType:
         self.response = requests.get(self.url, self.params)
 
         if self.response.status_code != HTTPStatus.OK:
             raise ResponseError(self.response, self.response.json())
-        if not self.schema:
+        if not getattr(self, 'schema', None):
             return self.response.json()
 
         try:

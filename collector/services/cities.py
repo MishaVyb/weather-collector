@@ -111,7 +111,7 @@ class InitCities(BaseSerivce, DBSessionMixin):
 ########################################################################################
 
 
-class FetchCities(BaseSerivce, FetchServiceMixin):
+class FetchCities(BaseSerivce, FetchServiceMixin[CitiesListSchema]):
     """
     Fetch cities list from GeoDB API, save them to JSON file for future custom
     configuration and call for `InitCities` service to store all new cities at database.
@@ -168,7 +168,11 @@ class FetchCities(BaseSerivce, FetchServiceMixin):
             json.dump([city.dict() for city in cities], file)
 
 
-class FetchCoordinates(BaseSerivce, DBSessionMixin, FetchServiceMixin):
+class FetchCoordinates(
+    BaseSerivce,
+    DBSessionMixin,
+    FetchServiceMixin[list[CityCoordinatesSchema]],
+):
     """
     If city object doesn't have coordinates, we should get them by calling for
     Open Weather Geocoding API. The API documantation says:
@@ -200,7 +204,7 @@ class FetchCoordinates(BaseSerivce, DBSessionMixin, FetchServiceMixin):
         self.params['q'] = f'{city.name},{city.countryCode}'
 
     def exicute(self):
-        geo_list: list[CityCoordinatesSchema] = self.fetch()
+        geo_list = self.fetch()
         if not geo_list:
             raise NoDataError(
                 'Getting coordinates failed. '
