@@ -63,8 +63,12 @@ class TestServices:
         'amount',
         [
             pytest.param(0),
+            pytest.param(3),
+            pytest.param(1),
             pytest.param(10),
             pytest.param(17),
+            pytest.param(50),
+            pytest.param(62),
             pytest.param(100, marks=pytest.mark.slow),
         ],
     )
@@ -75,6 +79,7 @@ class TestServices:
         config: CollectorConfig,
         amount: int,
     ):
+        assert session.query(CityModel).count() == 0
         monkeypatch.setattr(CONFIG, 'cities_amount', amount)
 
         FetchCities().exicute()

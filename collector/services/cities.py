@@ -117,7 +117,17 @@ class FetchCities(BaseSerivce, FetchServiceMixin[CitiesListSchema]):
 
     command = 'fetch_cities'
     url = 'http://geodb-free-service.wirefreethought.com/v1/geo/cities'
-    params = {"sort": "-population", "types": "CITY"}
+
+    # [NOTE]
+    # We are using GeoDB API Service under FREE plan provided at specified url.
+    # Unfortunately, in that case limit params is restricted up to 10.
+    # And for insntace we need make request 5 times to get 50 cityes.
+    restricted_limit = 10
+    params = {
+        'sort': '-population',
+        'types': 'CITY',
+        'limit': restricted_limit,
+    }
     schema = CitiesListSchema
 
     def exicute(self):
@@ -133,25 +143,25 @@ class FetchCities(BaseSerivce, FetchServiceMixin[CitiesListSchema]):
         InitCities(predefined=cities).exicute()
 
     def fetch(self):
-        # [NOTE]
-        # We are using GeoDB API Service under FREE plan provided at specified url.
-        # Unfortunately, in that case limit params is restricted up to 10.
-        # And for insntace we need make request 5 times to get 50 cityes.
-        CONFIG.cities_amount
-        restricted_limit = 10
-        self.params['limit'] = restricted_limit
         cities: list[CitySchema] = []
+        repeats = CONFIG.cities_amount // self.restricted_limit
+        remains = CONFIG.cities_amount % self.restricted_limit
 
-        for i in range(CONFIG.cities_amount // restricted_limit + 1):
-            offset = i * restricted_limit
+        for i in range(repeats + int(bool(remains))):
+            if i == repeats:
+                self.params['limit'] = remains # for final fetching
+
+            offset = i * self.restricted_limit
             self.params['offset'] = offset
 
-            logger.info(f'Fetching cities: {offset=}')
+            logger.info(f'Fetching cities: {offset}/{CONFIG.cities_amount}')
 
             # `data` is a core field at response json with list of cities
             cities += super().fetch().data
 
-        return cities[0 : CONFIG.cities_amount]
+
+        self.params['limit'] = self.restricted_limit  
+        return cities
 
     def append_to_file(self, cities: list[CitySchema]):
         if os.path.isfile(CONFIG.cities_file):
