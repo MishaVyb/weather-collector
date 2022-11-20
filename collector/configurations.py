@@ -6,7 +6,7 @@ logger = init_logger(__name__)
 
 
 class CollectorConfig(pydantic.BaseSettings):
-    debug: bool = True
+    debug: bool = False
 
     cities_amount: int = 50 if not debug else 2
     "Amount for auto-inital cities list by fetching them from GeoDB. "
@@ -21,7 +21,7 @@ class CollectorConfig(pydantic.BaseSettings):
     """
     Open Weather API key.
 
-    [NOTE] 
+    [NOTE]
     Default key is getting access for Open Weather under FREE plan and shold be used
     only for demonstration porpuses. Restrictions:
     - 60 calls/minute
