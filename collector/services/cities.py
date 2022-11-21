@@ -138,9 +138,9 @@ class FetchCities(BaseSerivce, FetchServiceMixin[CitiesListSchema]):
         cities = self.fetch()
         self.append_to_file(cities)
         logger.info(
-            f'Sucessfully fethed {CONFIG.cities_amount} cities and stored them at json'
+            f'Sucessfully fethed {CONFIG.cities_amount} cities and stored them at {CONFIG.cities_file} '
             'file. Go there to confirm results. You can make any changes and commit '
-            'them by calling for `init_cities` with -O flag. '
+            'them by calling for `init_cities` with --override option. '
         )
 
         InitCities(predefined=cities).exicute()
