@@ -59,6 +59,11 @@
 ![](https://img.shields.io/badge/black-22.6-blue)
 ![](https://img.shields.io/badge/flake8-5.0-blue)
 
+Run docker image.
+```sh
+$ docker run vybornyy/weather-collector
+```
+
 ## Getting Started
 
 ### Prerequisites
