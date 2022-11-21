@@ -17,7 +17,7 @@ class CollectorConfig(pydantic.BaseSettings):
     collect_weather_delay: float = 1 * 60 * 60
     "Delay between every weather measurement. Seconds. Dafault: 1 hour. "
 
-    open_wether_key: str = 'deecec0236349da5eb1666916ba49e8f'
+    open_weather_key: str = 'deecec0236349da5eb1666916ba49e8f'
     """
     Open Weather API key.
 

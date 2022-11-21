@@ -79,7 +79,7 @@ Also bound to Iterable, because JSON response could be a `list[pydantic.BaseMode
 class FetchServiceMixin(Generic[_SchemaType]):
     url: str = ''
     params: dict = {
-        "appid": CONFIG.open_wether_key,
+        "appid": CONFIG.open_weather_key,
         "units": "metric",
     }
     schema: Type[_SchemaType]

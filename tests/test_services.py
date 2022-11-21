@@ -12,7 +12,7 @@ from collector.services.cities import (
     FetchCoordinates,
     InitCities,
 )
-from collector.services.weather import CollectWether, FetchWeather, ReportWeather
+from collector.services.weather import CollectWeather, FetchWeather, ReportWeather
 
 
 logger = init_logger(__name__)
@@ -125,7 +125,7 @@ class TestServices:
         cities_amount = 3
         monkeypatch.setattr(CONFIG, 'cities_amount', cities_amount)
 
-        CollectWether(repeats=repeats, initial=True).exicute()
+        CollectWeather(repeats=repeats, initial=True).exicute()
         assert session.query(MeasurementModel).count() == cities_amount * repeats
 
     def test_collect_weather_initial_many_cities(
@@ -137,7 +137,7 @@ class TestServices:
         cities_amount = 50
         monkeypatch.setattr(CONFIG, 'cities_amount', cities_amount)
 
-        CollectWether(repeats=repeats, initial=True).exicute()
+        CollectWeather(repeats=repeats, initial=True).exicute()
         assert session.query(MeasurementModel).count() == cities_amount * repeats
 
     def test_collect_weather_with_cities_at_db(
@@ -149,7 +149,7 @@ class TestServices:
         monkeypatch: pytest.MonkeyPatch,
     ):
         repeats = 2
-        CollectWether(repeats=repeats).exicute()
+        CollectWeather(repeats=repeats).exicute()
         assert session.query(MeasurementModel).count() == len(cities_list) * repeats
 
     ####################################################################################
@@ -157,6 +157,6 @@ class TestServices:
     ####################################################################################
 
     def test_repost_weather(self, seed_cities_to_database, session: orm.Session):
-        CollectWether(repeats=2).exicute()
+        CollectWeather(repeats=2).exicute()
         ReportWeather(average=True, latest=True).exicute()
         ...

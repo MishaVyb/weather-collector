@@ -201,7 +201,7 @@ class FetchCoordinates(
     url = 'http://api.openweathermap.org/geo/1.0/direct'
     schema = list[CityCoordinatesSchema]
     params = {
-        "appid": CONFIG.open_wether_key,
+        "appid": CONFIG.open_weather_key,
         "limit": 10,
     }
 

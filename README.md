@@ -33,6 +33,7 @@
     </li>
     <li><a href="#usage">Usage</a></li>
     <li><a href="#explanations">Explanations</a></li>
+    <li><a href="#restrictions">Restrictions</a></li>
     <li><a href="#appreciations">Appreciations</a></li>
     <li><a href="#contact">Contact</a></li>
   </ol>
@@ -146,8 +147,7 @@
 ## Explanation
 
 1. Database Structure.
-
-    ![Untitled (1)](https://user-images.githubusercontent.com/103563736/202909727-66f6490c-a464-4fe8-8582-e9bd9aa1ed3a.jpg)
+    ![Untitled (3)](https://user-images.githubusercontent.com/103563736/202989181-cb714940-7df3-4a67-880c-048acd2bf571.jpg)
 
     `CityModel` <br>
     Contains cities which weather collecting for.
@@ -162,10 +162,27 @@
 
     We may describe other tables to store all the data in relational (SQL) way later, if we will need it.
 
-2. Restrictions. <br>
+2. Services Structure.
+    ![Untitled (2)](https://user-images.githubusercontent.com/103563736/202989192-42b7c2cc-f939-46fc-8630-06cb9e6fee1a.jpg)
+
+    `BaseService` presents basic definition for all other services.<br>
+    `DBSessionMixin` for making operations with databse.<br>
+    `FetchServiceMixin` for handling http requests.<br>
+
+
+## Restrictions
+1. Not async. <br>
     When executing services, all http requests runs synchronously. It takes a lot of time and hold processing execution. It's better to make them in async way to reach more speed.
 
-    In developing for now.
+2. Cities names unique constraint <br>
+    When calling for `InitCites` service, all cities descibed at `cities.json` appending to database and there are now checking for repetitions. So database may contains several cities with the same name and location.
+
+    To specify city explicitly, provide location coordinates or country code.
+      ```json
+    [
+        {"name": "..", "latitude": 31.1, "longitude": 121.4,},
+        {"name": "..", "countryCode": "BR"}
+    ]
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
 

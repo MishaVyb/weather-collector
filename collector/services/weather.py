@@ -28,7 +28,7 @@ logger = init_logger(__name__)
 ########################################################################################
 
 
-class MainWetherSchema(pydantic.BaseModel):
+class MainWeatherSchema(pydantic.BaseModel):
     """
     Schema for parsing `main` field from Open Weather response.
 
@@ -53,7 +53,7 @@ class WeatherMeasurementSchema(pydantic.BaseModel):
     For more information see `MeasurementModel` where we store all these values.
     """
 
-    main: MainWetherSchema
+    main: MainWeatherSchema
     dt: int
     "Time of data forecasted, Unix, UTC (timestamp). `measure_at` field at model."
 
@@ -129,7 +129,7 @@ class FetchWeather(
 ########################################################################################
 
 
-class CollectWether(BaseSerivce):
+class CollectWeather(BaseSerivce):
     command = 'collect'
     delay = CONFIG.collect_weather_delay
 
