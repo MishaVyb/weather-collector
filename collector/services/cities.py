@@ -152,7 +152,7 @@ class FetchCities(BaseSerivce, FetchServiceMixin[CitiesListSchema]):
 
         for i in range(repeats + int(bool(remains))):
             if i == repeats:
-                self.params['limit'] = remains # for final fetching
+                self.params['limit'] = remains  # for final fetching
 
             offset = i * self.restricted_limit
             self.params['offset'] = offset
@@ -161,7 +161,6 @@ class FetchCities(BaseSerivce, FetchServiceMixin[CitiesListSchema]):
 
             # `data` is a core field at response json with list of cities
             cities += super().fetch().data
-
 
         self.params['limit'] = self.restricted_limit
         return cities

@@ -13,6 +13,15 @@ from collector.functools import init_logger
 
 logger = init_logger(__name__)
 
+_SchemaType = TypeVar(
+    '_SchemaType',
+    bound=pydantic.BaseModel | Iterable[pydantic.BaseModel],
+)
+"""
+Bounded TypeVar for Generic classes that takes any subtype of pydantic.BaseModel class.
+Also bound to Iterable, because JSON response could be a `list[pydantic.BaseModel]`.
+"""
+
 
 class BaseSerivce:
     command: str = 'service'
@@ -27,7 +36,7 @@ class BaseSerivce:
         Parsing command line args and getting service initialized with thouse args.
         """
         if not argv:
-            argv = ['collect', '--initial'] # default service call
+            argv = ['collect', '--initial']  # default service call
 
         parser = argparse.ArgumentParser(description='Weather Collector. ')
         parser.add_argument(
@@ -56,10 +65,9 @@ class BaseSerivce:
         except StopIteration:
             raise ValueError(f'No service with this command: {command}. ')
 
-
     @classmethod
     def add_argument(cls, parser: argparse.ArgumentParser):
-       pass
+        pass
 
     def exicute(self):
         logger.info(f'{self} is running. ')
@@ -67,14 +75,6 @@ class BaseSerivce:
     def __str__(self) -> str:
         return f'<{self.__class__.__name__}>'
 
-
-_SchemaType = TypeVar('_SchemaType', bound=pydantic.BaseModel | Iterable)
-"""
-Bounded TypeVar for Generic classes that takes any subtype of pydantic.BaseModel class.
-
-[NOTE]
-Also bound to Iterable, because JSON response could be a `list[pydantic.BaseModel]`.
-"""
 
 class FetchServiceMixin(Generic[_SchemaType]):
     url: str = ''
