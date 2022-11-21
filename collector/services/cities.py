@@ -81,19 +81,22 @@ class InitCities(BaseSerivce, DBSessionMixin):
             '-O',
             '--override',
             action='store_true',
-            help='delete all records at Cities Table and store new list of cities',
+            help='set all other cities at DB not to be tracking for weather collecting',
         )
 
     def exicute(self):
         super().exicute()
         cities = self.predefined or self.load_from_file()
         if self.override:
-            deleted = self.delete(CityModel)
-            logger.info(f'Delete {deleted} records at {CityModel}')
+            previous: list[CityModel] = self.query(CityModel).all()
+            for city in previous:
+                city.is_tracked = False
+            logger.info(f'{len(previous)} cities are not tracked anymore. ')
 
         self.create_from_schema(CityModel, *cities)
         self.save()
-        logger.info(f'Add new {len(cities)} records to {CityModel}')
+
+        logger.info(f'Add new {len(cities)} records to {CityModel}. ')
 
     def load_from_file(self):
         try:
@@ -160,7 +163,7 @@ class FetchCities(BaseSerivce, FetchServiceMixin[CitiesListSchema]):
             cities += super().fetch().data
 
 
-        self.params['limit'] = self.restricted_limit  
+        self.params['limit'] = self.restricted_limit
         return cities
 
     def append_to_file(self, cities: list[CitySchema]):

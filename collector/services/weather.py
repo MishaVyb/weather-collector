@@ -78,15 +78,15 @@ class FetchWeather(
     schema = WeatherMeasurementSchema
 
     def __init__(self, **kwargs) -> None:
-
         BaseSerivce.__init__(self, **kwargs)
         DBSessionMixin.__init__(self)
 
-        self.cities: list[CityModel] = self.query(CityModel).all()
-
+        self.cities: list[CityModel] = (
+            self.query(CityModel).filter(CityModel.is_tracked).all()
+        )
         if not self.cities:
             raise NoDataError(
-                'No cities at DB. '
+                'No cities at database to be tracked. '
                 f'Call for {FetchCities.command} or {InitCities.command} before. '
             )
 
@@ -101,8 +101,13 @@ class FetchWeather(
                     continue
 
             measure, extra = self.fetch(city)
-            self.store(city, measure, extra)
-
+            model = MeasurementModel(
+                city=city,
+                measure_at=datetime.utcfromtimestamp(measure.dt),
+                main=MainWeatherDataModel(**measure.main.dict()),
+                extra=ExtraWeatherDataModel(data=extra),
+            )
+            self.create(model)
         self.save()
 
     def fetch(self, city: CityModel):  # type: ignore
@@ -110,7 +115,6 @@ class FetchWeather(
 
         self.params['lat'] = str(city.latitude)
         self.params['lon'] = str(city.longitude)
-
         measure = super().fetch()
 
         extra: dict = self.response.json()
@@ -118,16 +122,6 @@ class FetchWeather(
             extra.pop(field)
 
         return measure, extra
-
-    def store(self, city: CityModel, measure: WeatherMeasurementSchema, extra: dict):
-        self.create(
-            MeasurementModel(
-                city=city,
-                measure_at=datetime.utcfromtimestamp(measure.dt),
-                main=MainWeatherDataModel(**measure.main.dict()),
-                extra=ExtraWeatherDataModel(data=extra),
-            )
-        )
 
 
 ########################################################################################

@@ -119,9 +119,13 @@
     ```sh
     $ python3 manage.py init_cites
     ```
-    By default cites will be appended to already handled ones. If you want to override existing, use `--override` flag. It will delete all already existing records in city table before.
+    By default cites will be appended to already handled ones. If you want to track only that new list of cities, use `--override` flag. It seting all existing cities at database not to be tracking for weather collecting anymore.
     ```sh
     $ python3 manage.py init_cites --override
+    ```
+    Or re-init and run collecting in one line.
+    ```sh
+    $ python3 manage.py collect --initial --override
     ```
 
 3. Get weather report.

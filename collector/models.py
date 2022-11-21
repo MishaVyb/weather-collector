@@ -34,15 +34,15 @@ class CityModel(BaseModel):
     __tablename__ = 'city'
 
     name: str = db.Column(db.String(50), nullable=False)
+    is_tracked: str = db.Column(db.Boolean, nullable=False, default=True)
     country: str = db.Column(db.String(50))
     countryCode: str = db.Column(db.String(3))
-    latitude: float = db.Column(db.Float())
-    longitude: float = db.Column(db.Float())
-    population: int = db.Column(db.Integer())
+    latitude: float = db.Column(db.Float)
+    longitude: float = db.Column(db.Float)
+    population: int = db.Column(db.Integer)
 
     measurements: list[MeasurementModel] = orm.relationship(
         'MeasurementModel',
-        # back_populates='city',
         backref='city',
         cascade='all, delete-orphan',
     )
@@ -69,10 +69,13 @@ class MeasurementModel(BaseModel):
 
     __tablename__ = 'weather_measurement'
 
-    # city: CityModel = orm.relationship('CityModel', back='measurements')
-    city_id: int = db.Column(db.Integer, db.ForeignKey("city.id"), nullable=False)
+    city_id: int = db.Column(
+        db.Integer,
+        db.ForeignKey('city.id', onupdate='CASCADE', ondelete='CASCADE'),
+        nullable=False,
+    )
 
-    measure_at: datetime = db.Column(db.DateTime(), nullable=False)
+    measure_at: datetime = db.Column(db.DateTime, nullable=False)
     "Time of data forecasted. UTC. Do not confuse with base model `created_at` field."
 
     main: MainWeatherDataModel = orm.relationship(
@@ -83,10 +86,9 @@ class MeasurementModel(BaseModel):
     )
 
     # [NOTE]
-    # Other fields can be handled here as one-to-one relation, if the reason is appear
-    # in a future.
+    # Other fields can be handled here as one-to-one relation to seperate table, if
+    # the reason is appear in a future.
     ...
-
 
     extra: ExtraWeatherDataModel = orm.relationship(
         'ExtraWeatherDataModel',
@@ -105,32 +107,32 @@ class MainWeatherDataModel(BaseModel):
 
     measurement_id = db.Column(db.Integer, db.ForeignKey('weather_measurement.id'))
 
-    temp: float = db.Column(db.Float())
+    temp: float = db.Column(db.Float)
     "Temperature. Celsius."
-    feels_like: float = db.Column(db.Float())
+    feels_like: float = db.Column(db.Float)
     """
     This temperature parameter accounts for the human perception of weather. Celsius.
     """
-    temp_min: float = db.Column(db.Float())
+    temp_min: float = db.Column(db.Float)
     """
     Minimum temperature at the moment. This is minimal currently observed temperature
     (within large megalopolises and urban areas). Celsius.
     """
-    temp_max: float = db.Column(db.Float())
+    temp_max: float = db.Column(db.Float)
     """
     Maximum temperature at the moment. This is maximal currently observed temperature
     (within large megalopolises and urban areas). Celsius.
     """
-    pressure: int = db.Column(db.Integer())
+    pressure: int = db.Column(db.Integer)
     """
     Atmospheric pressure (on the sea level, if there is no sea_level or grnd_level).
     hPa.
     """
-    humidity: int = db.Column(db.Integer())
+    humidity: int = db.Column(db.Integer)
     "Humidity. %"
-    sea_level: int = db.Column(db.Integer())
+    sea_level: int = db.Column(db.Integer)
     "Atmospheric pressure on the sea level. hPa."
-    grnd_level: int = db.Column(db.Integer())
+    grnd_level: int = db.Column(db.Integer)
     "Atmospheric pressure on the ground level. hPa."
 
 
@@ -142,4 +144,4 @@ class ExtraWeatherDataModel(BaseModel):
     __tablename__ = 'extra_weather_data'
 
     measurement_id = db.Column(db.Integer, db.ForeignKey('weather_measurement.id'))
-    data: dict = db.Column(db.JSON())
+    data: dict = db.Column(db.JSON)

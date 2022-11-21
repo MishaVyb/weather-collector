@@ -63,12 +63,9 @@ class TestServices:
         'amount',
         [
             pytest.param(0),
-            pytest.param(3),
             pytest.param(1),
-            pytest.param(10),
             pytest.param(17),
             pytest.param(50),
-            pytest.param(62),
             pytest.param(100, marks=pytest.mark.slow),
         ],
     )

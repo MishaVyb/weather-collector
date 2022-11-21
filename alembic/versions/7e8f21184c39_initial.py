@@ -1,8 +1,8 @@
 """initial
 
-Revision ID: 9745ab26e8d9
+Revision ID: 7e8f21184c39
 Revises: 
-Create Date: 2022-11-20 13:41:21.151217
+Create Date: 2022-11-21 08:09:31.982253
 
 """
 from alembic import op
@@ -10,7 +10,7 @@ import sqlalchemy as sa
 
 
 # revision identifiers, used by Alembic.
-revision = '9745ab26e8d9'
+revision = '7e8f21184c39'
 down_revision = None
 branch_labels = None
 depends_on = None
@@ -23,6 +23,7 @@ def upgrade() -> None:
     sa.Column('created_at', sa.DateTime(timezone=True), server_default=sa.text('(CURRENT_TIMESTAMP)'), nullable=True),
     sa.Column('updated_at', sa.DateTime(timezone=True), nullable=True),
     sa.Column('name', sa.String(length=50), nullable=False),
+    sa.Column('is_tracked', sa.Boolean(), nullable=False),
     sa.Column('country', sa.String(length=50), nullable=True),
     sa.Column('countryCode', sa.String(length=3), nullable=True),
     sa.Column('latitude', sa.Float(), nullable=True),
@@ -36,8 +37,8 @@ def upgrade() -> None:
     sa.Column('created_at', sa.DateTime(timezone=True), server_default=sa.text('(CURRENT_TIMESTAMP)'), nullable=True),
     sa.Column('updated_at', sa.DateTime(timezone=True), nullable=True),
     sa.Column('city_id', sa.Integer(), nullable=False),
-    sa.Column('measure_at', sa.DateTime(), nullable=True),
-    sa.ForeignKeyConstraint(['city_id'], ['city.id'], ),
+    sa.Column('measure_at', sa.DateTime(), nullable=False),
+    sa.ForeignKeyConstraint(['city_id'], ['city.id'], onupdate='CASCADE', ondelete='CASCADE'),
     sa.PrimaryKeyConstraint('id'),
     sa.UniqueConstraint('id')
     )
