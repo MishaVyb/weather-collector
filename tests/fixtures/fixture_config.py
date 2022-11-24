@@ -17,6 +17,7 @@ def config():
         cities_amount=20,
         cities_file=TEST_CITIES_FILE,
         collect_weather_delay=0.5,
+        _env_file='tests.env'
     )
 
 

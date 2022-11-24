@@ -1,17 +1,16 @@
 from __future__ import annotations
 
-from typing import Type
+from typing import ClassVar, Type
 
 import pydantic
 import sqlalchemy as db
 import sqlalchemy.orm as orm
+from collector.configurations import CONFIG, SQLiteDatabaseConfig
 
 from collector.functools import init_logger
 from collector.models import BaseModel
 
 logger = init_logger(__name__)
-engine = db.create_engine('sqlite:///db.sqlite3', future=True)
-Session: Type[orm.Session] = orm.sessionmaker(engine)
 
 
 class DBSessionMixin:
@@ -21,8 +20,26 @@ class DBSessionMixin:
     changes `save()` method must by called.
     """
 
+    sessison_class: Type[orm.Session] | None = None
+    config = CONFIG.db
+
     def __init__(self) -> None:
-        self.session = Session()
+        logger.info(f'Establishing connection to database:: {self.config.url}')
+        if isinstance(self.config, SQLiteDatabaseConfig):
+            # [FIXME]
+            # for SQLite we have to establish connection every time for every thread
+
+            engine = db.create_engine(self.config.url, future=True)
+            connection = engine.connect()
+            DBSessionMixin.sessison_class = orm.sessionmaker(bind=connection)
+
+        elif not DBSessionMixin.sessison_class:
+            engine = db.create_engine(self.config.url)
+            connection = engine.connect()
+            DBSessionMixin.sessison_class = orm.sessionmaker(bind=connection)
+
+        assert callable(DBSessionMixin.sessison_class), 'Check database configuration'
+        self.session = DBSessionMixin.sessison_class()
 
     def query(self, model_class: Type[BaseModel]):
         return self.session.query(model_class)

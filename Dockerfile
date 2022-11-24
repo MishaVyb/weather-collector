@@ -10,6 +10,4 @@ RUN pip3 install -r requirements.txt
 
 COPY . .
 
-RUN alembic upgrade head
-
-CMD [ "python3", "manage.py" , "collect", "--initial"]
+CMD [ "python3", "manage.py"]

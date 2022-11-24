@@ -78,7 +78,7 @@ class InitCities(BaseSerivce, DBSessionMixin):
     @classmethod
     def add_argument(cls, parser: argparse.ArgumentParser):
         parser.add_argument(
-            '-O',
+            '-o',
             '--override',
             action='store_true',
             help='set all other cities at DB not to be tracking for weather collecting',
@@ -87,6 +87,9 @@ class InitCities(BaseSerivce, DBSessionMixin):
     def exicute(self):
         super().exicute()
         cities = self.predefined or self.load_from_file()
+        if not cities:
+            raise NoDataError(f'{CONFIG.cities_file} has no cities to initialize. ')
+
         if self.override:
             previous: list[CityModel] = self.query(CityModel).all()
             for city in previous:

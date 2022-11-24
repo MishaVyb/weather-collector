@@ -96,11 +96,7 @@ $ docker run vybornyy/weather-collector
 
 ## Usage
 
-1. Run continuously collecting weather.
-    ```sh
-    $ python3 manage.py
-    ```
-    **Note**. That command runs default package execution and equals to:
+1. Init cities and run continuously collecting weather.
     ```sh
     $ python3 manage.py collect --initial
     ```

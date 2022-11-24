@@ -2,8 +2,7 @@ from __future__ import annotations
 
 import argparse
 import sys
-from datetime import datetime
-from time import sleep
+from datetime import datetime, timedelta
 
 import pydantic
 
@@ -19,6 +18,7 @@ from collector.models import (
 from collector.services.base import BaseSerivce, FetchServiceMixin
 from collector.services.cities import FetchCities, FetchCoordinates, InitCities
 from collector.session import DBSessionMixin
+from apscheduler.schedulers.blocking import BlockingScheduler
 
 logger = init_logger(__name__)
 
@@ -129,15 +129,15 @@ class FetchWeather(
 ########################################################################################
 
 
-class CollectWeather(BaseSerivce):
+class CollectScheduler(BaseSerivce):
     command = 'collect'
-    delay = CONFIG.collect_weather_delay
 
     def __init__(
         self, *, repeats: int | None = None, initial: bool = False, **kwargs
     ) -> None:
         self.counter = 0
         self.repeats = repeats
+        self.scheduler = BlockingScheduler()
 
         if initial:
             try:
@@ -165,33 +165,42 @@ class CollectWeather(BaseSerivce):
         )
 
     def exicute(self):
-        while True:
-            logger.info(f'\n\n\t Starting collecting weather ({self.counter}). ')
+        super().exicute()
+        self.scheduler.add_job(
+            self._worker, 'interval', seconds=CONFIG.collect_weather_delay
+        )
 
-            try:
-                FetchWeather().exicute()
-                logger.info('Collected successfuly. ')
-            except CollectorBaseExeption as e:
-                # logging all custom exeptions and continue collecting
-                #
-                # [NOTE]
-                # Custom exeptions raised when response is broken or when db has not
-                # neccassery data. While this thread will be sliping, the reason of
-                # error could be changed by others. Therefore, we won't stop collecting.
-                logger.error(e)
+        for job in self.scheduler.get_jobs():
+            job.modify(next_run_time=datetime.now())
 
-            finally:
-                self.counter += 1
-                if self.repeats and self.counter >= self.repeats:
-                    break
+        self.scheduler.start()
 
-                logger.info(
-                    f'Next collecting runs in {self.delay} seconds. Sleeping...'
-                )
+    def _worker(self):
+        try:
+            logger.info(f'\n\n\t Starting collecting weather ({self.counter}).\n')
+            FetchWeather().exicute()
+            logger.info('Collected successfuly. ')
+            logger.info(f'Next collecting runs in {CONFIG.collect_weather_delay} sec. ')
 
-            sleep(self.delay)
+        except CollectorBaseExeption as e:
+            # make log and try again in a while
+            #
+            # [NOTE]
+            # Custom exeptions raised when response is broken or when db has not
+            # neccassery data. While this thread will be waiting for nex job exicution,
+            # the reason of error could be changed by others.
+            # Therefore, wa adding a new job in a scheduler.
+            logger.error(
+                'Collecting fails. '
+                f'Try again in {CONFIG.retry_collect_delay}. Detail: {e}. '
+            )
+            retry_at = datetime.now() + timedelta(seconds=CONFIG.retry_collect_delay)
+            self.scheduler.add_job(self._worker, 'date', run_date=retry_at)
 
-        logger.info('End of collecting. ')
+        finally:
+            self.counter += 1
+            if self.repeats and self.counter >= self.repeats:
+                self.scheduler.shutdown(wait=True)
 
 
 ########################################################################################

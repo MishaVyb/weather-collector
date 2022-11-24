@@ -35,8 +35,12 @@ class BaseSerivce:
         """
         Parsing command line args and getting service initialized with thouse args.
         """
-        if not argv:
-            argv = ['collect', '--initial']  # default service call
+        services_description = '\n'.join(
+            [
+                f'{service.command}:\n\t{service.__doc__}'
+                for service in BaseSerivce.__subclasses__()
+            ]
+        )
 
         parser = argparse.ArgumentParser(description='Weather Collector. ')
         parser.add_argument(

@@ -1,0 +1,25 @@
+version: '3.8'
+
+services:
+
+  db:
+    image: postgres:13.0-alpine
+    volumes:
+      - /var/lib/postgresql/data/
+    ports:
+      - 5432:5432
+    environment:
+      POSTGRES_USER: vybornyy
+      POSTGRES_PASSWORD: vybornyy
+      POSTGRES_DB: default
+
+  worker:
+    build: .
+    restart: on-failure
+    depends_on:
+      # [FIXME] helthcheck
+      # This service starting running after previous has been mounted,
+      # but not after it has done its exicution.
+      - db
+    env_file:
+      - ./.env
