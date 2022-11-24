@@ -87,6 +87,9 @@
     ```sh
     $ make start
     ```
+    > WARNING! <br>
+    > If database connection faills, try again in a few seconds. It could be because postress server is not running yet.
+
 
 ## Run as python script.
 ### Prerequisites
@@ -116,6 +119,14 @@
     ```sh
    (venv) $ alembic upgrade head
    ```
+5. Define environment variables
+    ```sh
+      $ nano debug.env
+    ```
+    ```env
+    debug = true
+    open_weather_key = ...
+    ```
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
 
 ## Usage
