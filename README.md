@@ -59,14 +59,38 @@
 ![](https://img.shields.io/badge/black-22.6-blue)
 ![](https://img.shields.io/badge/flake8-5.0-blue)
 
-Run docker image.
-```sh
-$ docker run vybornyy/weather-collector
-```
 
-## Getting Started
 
+# Getting Started
+
+## Run docker compose.
 ### Prerequisites
+* Docker **20.10.21**
+
+1. Clone the repo.
+   ```sh
+   $ git clone git@github.com:MishaVyb/weather-collector.git
+   ```
+2. Define environment variables
+    ```sh
+      $ cd weather-collector
+      $ nano .env
+    ```
+    ```env
+    debug = false
+    open_weather_key = ...
+    db__user = vybornyy
+    db__password = vybornyy
+    ```
+
+3. Build and run docker compose by predefined `make` command.
+    ```sh
+    $ make start
+    ```
+
+## Run as python script.
+### Prerequisites
+
 * python **3.10.4**
 * pip
 
