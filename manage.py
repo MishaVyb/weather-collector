@@ -4,15 +4,14 @@ from collector.services import BaseSerivce
 
 logger = init_logger(__name__)
 
-from datetime import datetime
-from time import sleep
-from apscheduler.schedulers.background import BackgroundScheduler
 from apscheduler.schedulers.blocking import BlockingScheduler
 
 def hold():
     try:
         BaseSerivce.manage_services(['--help'])
     except (KeyboardInterrupt, SystemExit):
+        # --help command is raising exit exeption
+        # catch it to hold our program exicution
         pass
     finally:
         logger.info('Processing is holding. Press Ctr-C to exit.')
@@ -20,9 +19,9 @@ def hold():
         scheduler.start()
 
 def main():
-    argv = sys.argv[1:]
-    if argv:
-        service = BaseSerivce.manage_services(argv)
+    options = sys.argv[1:] # the first arg is a 'manage.py', skipping it
+    if options:
+        service = BaseSerivce.manage_services(options)
         service.exicute()
     else:
         hold()
@@ -30,10 +29,5 @@ def main():
 
 
 if __name__ == '__main__':
-    # # if len(sys.argv) > 1 and sys.argv[1] == 'hellow':
-    # logger.info('hellow world docker')
-
-    # # else:
-    logger.info(sys.argv)
     main()
 

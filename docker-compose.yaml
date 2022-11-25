@@ -8,10 +8,8 @@ services:
       - /var/lib/postgresql/data/
     ports:
       - 5432:5432
-    environment:
-      POSTGRES_USER: vybornyy
-      POSTGRES_PASSWORD: vybornyy
-      POSTGRES_DB: default
+    env_file:
+      - ./prod.env
 
   worker:
     build: .
@@ -21,5 +19,5 @@ services:
       # This service starting running after previous has been mounted,
       # but not after it has done its exicution.
       - db
-    env_file:
-      - ./.env
+    # env_file:
+    #   - ./prod.env

@@ -74,13 +74,14 @@
 2. Define environment variables
     ```sh
       $ cd weather-collector
-      $ nano .env
+      $ nano prod.env
     ```
     ```env
     debug = false
     open_weather_key = ...
-    db__user = vybornyy
-    db__password = vybornyy
+    POSTGRES_USER = vybornyy
+    POSTGRES_PASSWORD = vybornyy
+    POSTGRES_DB = default
     ```
 
 3. Build and run docker compose by predefined `make` command.
