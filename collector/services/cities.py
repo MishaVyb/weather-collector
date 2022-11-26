@@ -146,7 +146,7 @@ class FetchCities(BaseSerivce, FetchServiceMixin[CitiesListSchema]):
             'them by calling for `init_cities` with --override option. '
         )
 
-        InitCities(predefined=cities).exicute()
+        InitCities(predefined=cities, **self.init_kwargs).exicute()
 
     def fetch(self):
         cities: list[CitySchema] = []

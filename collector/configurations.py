@@ -14,7 +14,7 @@ class DatabaseConfig(pydantic.BaseModel):
     password: str
 
     # service name ('db') if running at docker-compose or 'localhost' if running localy
-    host: str = 'db' # and 'localhost'
+    host: str = 'db'
     port: int = 5432
     database: str = 'default'
 
@@ -37,17 +37,15 @@ class SQLiteDatabaseConfig(pydantic.BaseModel):
 
 class CollectorConfig(pydantic.BaseSettings):
     """
-    cities_amount: int = 50
+    cities_amount: `int` = 50
         Amount for auto-inital cities list by fetching them from GeoDB.
-    cities_file: str = 'cities.json'
+    cities_file: `str` = 'cities.json'
         File to descibe which cities weather collector fetching data for.
-    collect_weather_delay: float = 1 * 60 * 60
+    collect_weather_delay: `float` = 1 * 60 * 60
         Delay between every weather measurement. Seconds. Dafault: 1 hour.
-    open_weather_key: str
-        Open Weather API key.
-        [NOTE]
-        Default key is getting access for Open Weather under FREE plan and should be used
-        only for demonstration porpuses. Restrictions:
+    open_weather_key: `str`
+        Open Weather API key. Default key is getting access for Open Weather under FREE
+        plan and should be used only for demonstration porpuses. Restrictions:
         - 60 calls/minute
         - 1,000,000 calls/month
     """
@@ -73,7 +71,7 @@ class CollectorConfig(pydantic.BaseSettings):
             return values
 
         # at this point we can not check is posgress variables was loaded
-        # because the could be uploaded from 'prod.env' bu we are using 'debug.env'.
+        # because they could be uploaded from 'prod.env' but we are using 'debug.env'.
         # therefore for debug mode sqlite is alwase used.
         if values.get('debug'):
             for field in DatabaseConfig.__fields__:
@@ -81,19 +79,17 @@ class CollectorConfig(pydantic.BaseSettings):
         return db
 
     @pydantic.root_validator(pre=True)
-    def make_alias_to_posrgess_variables(cls, values: dict):
+    def make_config_fields_equal_to_postrges_variables(cls, values: dict):
         db: dict = values.get('db', {})
         if not isinstance(db, dict):
             return values
 
-        if values.get('POSTGRES_USER'):
-            db.setdefault('user', values.get('POSTGRES_USER'))
-        if values.get('POSTGRES_PASSWORD'):
-            db.setdefault('password', values.get('POSTGRES_PASSWORD'))
-        if values.get('POSTGRES_DB'):
-            db.setdefault('database', values.get('POSTGRES_DB'))
-        if values.get('POSTGRES_HOST'):
-            db.setdefault('host', values.get('POSTGRES_HOST'))
+        for config_field, postrges_field in zip(
+            ['POSTGRES_USER', 'POSTGRES_PASSWORD', 'POSTGRES_DB', 'POSTGRES_HOST'],
+            ['user', 'password', 'database', 'host'],
+        ):
+            if values.get(postrges_field):
+                db.setdefault(config_field, values.get(postrges_field))
 
         values['db'] = db
         return values
@@ -115,6 +111,3 @@ except Exception as e:
     raise RuntimeError(
         f'Init configurations fails. Ensure to have ".env" file. Details: {e}'
     )
-
-
-

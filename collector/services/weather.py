@@ -95,7 +95,7 @@ class FetchWeather(
         for city in self.cities:
             if not all([city.longitude, city.latitude]):
                 try:
-                    FetchCoordinates(city).exicute()
+                    FetchCoordinates(city, **self.init_kwargs).exicute()
                 except NoDataError as e:
                     logger.warning(f'Can not get weather for {city}: {e}. Continue. ')
                     continue
@@ -178,7 +178,7 @@ class CollectScheduler(BaseSerivce):
     def _worker(self):
         try:
             logger.info(f'\n\n\t Starting collecting weather ({self.counter}).\n')
-            FetchWeather().exicute()
+            FetchWeather(**self.init_kwargs).exicute()
             logger.info('Collected successfuly. ')
             logger.info(f'Next collecting runs in {CONFIG.collect_weather_delay} sec. ')
 

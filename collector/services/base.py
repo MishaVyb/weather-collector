@@ -28,7 +28,7 @@ class BaseSerivce:
     "Command name to run service in command line. "
 
     def __init__(self, **kwargs) -> None:
-        pass
+        self.init_kwargs = kwargs
 
     @staticmethod
     def manage_services(argv: list[str]):
