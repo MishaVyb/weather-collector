@@ -4,7 +4,7 @@ import pydantic
 
 from collector.functools import init_logger
 
-logger = init_logger(__name__, level=logging.INFO)
+logger = init_logger(__name__, level=logging.DEBUG)
 
 
 class DatabaseConfig(pydantic.BaseModel):
@@ -12,7 +12,9 @@ class DatabaseConfig(pydantic.BaseModel):
     driver: str | None = 'psycopg2'  # if None default db driver will be used
     user: str
     password: str
-    host: str = 'db'
+
+    # service name ('db') if running at docker-compose or 'localhost' if running localy
+    host: str = 'db' # and 'localhost'
     port: int = 5432
     database: str = 'default'
 
@@ -61,6 +63,7 @@ class CollectorConfig(pydantic.BaseSettings):
     POSTGRES_USER: str | None = None
     POSTGRES_PASSWORD: str | None = None
     POSTGRES_DB: str | None = None
+    POSTGRES_HOST: str | None = None
 
     db: DatabaseConfig | SQLiteDatabaseConfig = SQLiteDatabaseConfig()
 
@@ -87,6 +90,10 @@ class CollectorConfig(pydantic.BaseSettings):
             db.setdefault('user', values.get('POSTGRES_USER'))
         if values.get('POSTGRES_PASSWORD'):
             db.setdefault('password', values.get('POSTGRES_PASSWORD'))
+        if values.get('POSTGRES_DB'):
+            db.setdefault('database', values.get('POSTGRES_DB'))
+        if values.get('POSTGRES_HOST'):
+            db.setdefault('host', values.get('POSTGRES_HOST'))
 
         values['db'] = db
         return values
@@ -95,12 +102,9 @@ class CollectorConfig(pydantic.BaseSettings):
         return '\n' + pformat(self.dict())
 
     class Config:
-        # production build envirement variables described at 'prod.env'
-        # 'debug.env' has the highest priority and addet to .dockerignore
-        env_file = (
-            'prod.env',
-            # 'debug.env',
-        )
+        # debug.env and .env has more higher priority than prod.env
+        # describe production build at prod.env or .env (debug.env in .dockerignore)
+        env_file = 'prod.env', 'debug.env', '.env'
         env_nested_delimiter = '__'
 
 
@@ -109,7 +113,8 @@ try:
     logger.debug(f'Running collector under this configurations: {CONFIG}')
 except Exception as e:
     raise RuntimeError(
-        f'Init configurations falls down. Ensure to have ".env" file. Details: {e}'
+        f'Init configurations fails. Ensure to have ".env" file. Details: {e}'
     )
+
 
 

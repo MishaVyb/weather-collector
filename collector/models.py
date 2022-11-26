@@ -34,7 +34,7 @@ class CityModel(BaseModel):
     __tablename__ = 'city'
 
     name: str = db.Column(db.String(50), nullable=False)
-    is_tracked: str = db.Column(db.Boolean, nullable=False, default=True)
+    is_tracked: bool = db.Column(db.Boolean, nullable=False, default=True)
     country: str = db.Column(db.String(50))
     countryCode: str = db.Column(db.String(3))
     latitude: float = db.Column(db.Float)
