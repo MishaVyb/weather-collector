@@ -89,7 +89,7 @@
     $ make start
     ```
     > WARNING! <br>
-    > If database connection faills, try again in a few seconds. It could be because postress server is not running yet.
+    > If database connection fails, try again in a few seconds. It could be because postress server is not running yet.
 
 
 ## Run as python script.
@@ -161,6 +161,10 @@
     ```sh
     $ python3 manage.py init_cites --override
     ```
+    Or re-fetch cities. This line invokes `InitCities` with `--override` flag after fetching.
+    ```sh
+    $ python3 manage.py fetch_cites --override
+    ```
     Or re-init and run collecting in one line.
     ```sh
     $ python3 manage.py collect --initial --override
@@ -217,7 +221,7 @@
     To specify city explicitly, provide location coordinates or country code.
       ```json
     [
-        {"name": "..", "latitude": 31.1, "longitude": 121.4,},
+        {"name": "..", "latitude": 31.1, "longitude": 121.4},
         {"name": "..", "countryCode": "BR"}
     ]
 
