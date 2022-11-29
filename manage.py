@@ -1,10 +1,12 @@
 import sys
+
+from apscheduler.schedulers.blocking import BlockingScheduler
+
 from collector.functools import init_logger
 from collector.services import BaseSerivce
 
 logger = init_logger(__name__)
 
-from apscheduler.schedulers.blocking import BlockingScheduler
 
 def hold():
     try:
@@ -18,8 +20,9 @@ def hold():
         scheduler = BlockingScheduler()
         scheduler.start()
 
+
 def main():
-    options = sys.argv[1:] # the first arg is a 'manage.py', skipping it
+    options = sys.argv[1:]  # the first arg is a 'manage.py', skipping it
     if options:
         service = BaseSerivce.manage_services(options)
         service.exicute()
@@ -27,7 +30,5 @@ def main():
         hold()
 
 
-
 if __name__ == '__main__':
     main()
-

@@ -1,87 +1,53 @@
-import os
+import logging
 from typing import Type
-import pytest
 
+import pytest
 import sqlalchemy as db
 import sqlalchemy.orm as orm
-from collector.functools import init_logger
+
 from collector import models
-from collector import session as session_module
+from collector.configurations import CollectorConfig
+from collector.functools import init_logger
+from collector.session import DBSessionMixin
+
+logger = init_logger(__name__, logging.DEBUG)
 
 
-logger = init_logger(__name__)
-
-TEST_DB_FILE = os.path.join(os.path.dirname(__file__), 'testdb.sqlite3')
-TEST_JOURNAL_FILE = os.path.join(os.path.dirname(__file__), 'testdb.sqlite3-journal')
-
-
-@pytest.fixture(scope="session")
-def connection():
-    logger.debug('connection fixture')
-    if os.path.isfile(TEST_DB_FILE) or os.path.isfile(TEST_JOURNAL_FILE):
-        logger.warning(f'Test begins with already existing test db: {TEST_DB_FILE}.')
-
-    engine = db.create_engine(f'sqlite:///{TEST_DB_FILE}', future=True)
-    return engine.connect()
+@pytest.fixture
+def mock_database_config(
+    monkeypatch: pytest.MonkeyPatch,
+    config: CollectorConfig,
+):
+    logger.debug('mock_database_config fixture')
+    monkeypatch.setattr(DBSessionMixin, 'config', config.db)
 
 
-@pytest.fixture(scope="session")
-def setup_database(connection):
+@pytest.fixture  # (scope="session")
+def engine(config: CollectorConfig):
+    logger.debug(f'engine fixture. bind to: {config.db.url}')
+    return db.create_engine(config.db.url, future=True, echo=False)
+
+
+@pytest.fixture  # (scope="session")
+def setup_database(engine: db.engine.Engine, mock_database_config):
     logger.debug('setup_database fixture')
 
-    models.Base.metadata.bind = connection
-    models.Base.metadata.create_all()
+    models.Base.metadata.drop_all(engine)  # clear leftovers from previous broken tests
+    models.Base.metadata.create_all(engine)
     yield
-    models.Base.metadata.drop_all()
-
-    if os.path.isfile(TEST_DB_FILE):
-        os.remove(TEST_DB_FILE)
-    if os.path.isfile(TEST_JOURNAL_FILE):
-        os.remove(TEST_JOURNAL_FILE)
+    logger.debug(engine.pool.status())
+    models.Base.metadata.drop_all(engine)
 
 
 @pytest.fixture
-def clear_records(setup_database, connection):
-    yield
-    logger.debug('session clear_records')
-
-    cleaned_models: list[Type[models.BaseModel]] = [
-        models.CityModel,
-        models.MeasurementModel,
-        models.MainWeatherDataModel,
-        models.ExtraWeatherDataModel,
-    ]
-
-    Session: Type[orm.Session] = orm.sessionmaker(bind=connection)
-    session = Session()
-    for model in cleaned_models:
-
-        try:
-            session.query(model).delete()
-        except Exception as e:
-            logger.error(e)
-            continue
-
-    session.close()
+def session_class():
+    logger.debug('session_class fixture')
+    return orm.Session  # return default Session, not from orn.session_maker (for now)
 
 
 @pytest.fixture
-def session_class(setup_database, clear_records, connection):
-    logger.debug('session fixture')
-    Session: Type[orm.Session] = orm.sessionmaker(bind=connection)
-    yield Session
-
-
-@pytest.fixture
-def session(setup_database, clear_records, connection):
+def session(engine: db.engine.Engine, session_class: Type[orm.Session]):
     logger.debug('opened session fixture')
-    Session: Type[orm.Session] = orm.sessionmaker(
-        autocommit=False, autoflush=False, bind=connection
-    )
-    yield Session()
-
-
-@pytest.fixture
-def mock_session(monkeypatch: pytest.MonkeyPatch, session_class: Type[orm.Session]):
-    logger.debug('mock_session fixture')
-    monkeypatch.setattr(session_module, 'Session', session_class)
+    with session_class(engine) as session:
+        yield session
+        session.commit()

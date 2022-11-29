@@ -41,6 +41,7 @@ class BaseSerivce:
                 for service in BaseSerivce.__subclasses__()
             ]
         )
+        logger.debug(services_description)
 
         parser = argparse.ArgumentParser(description='Weather Collector. ')
         parser.add_argument(

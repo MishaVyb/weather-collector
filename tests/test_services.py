@@ -1,24 +1,20 @@
 import pydantic
 import pytest
 import sqlalchemy.orm as orm
+
 from collector.configurations import CONFIG, CollectorConfig
 from collector.exeptions import NoDataError
-
 from collector.functools import init_logger
 from collector.models import CityModel, MeasurementModel
-from collector.services.cities import (
-    CitySchema,
-    FetchCities,
-    FetchCoordinates,
-    InitCities,
-)
-from collector.services.weather import CollectScheduler, FetchWeather, ReportWeather
-
+from collector.services.cities import (CitySchema, FetchCities,
+                                       FetchCoordinates, InitCities)
+from collector.services.weather import (CollectScheduler, FetchWeather,
+                                        ReportWeather)
 
 logger = init_logger(__name__)
 
 
-@pytest.mark.usefixtures('mock_session', 'mock_config')
+@pytest.mark.usefixtures('mock_config', 'setup_database')
 class TestServices:
 
     ####################################################################################
@@ -62,10 +58,8 @@ class TestServices:
     @pytest.mark.parametrize(
         'amount',
         [
-            pytest.param(0),
             pytest.param(1),
             pytest.param(17),
-            pytest.param(50),
             pytest.param(100, marks=pytest.mark.slow),
         ],
     )
@@ -76,7 +70,6 @@ class TestServices:
         config: CollectorConfig,
         amount: int,
     ):
-        assert session.query(CityModel).count() == 0
         monkeypatch.setattr(CONFIG, 'cities_amount', amount)
 
         FetchCities().exicute()
@@ -84,6 +77,15 @@ class TestServices:
         assert session.query(CityModel).count() == amount
         cities_from_file = pydantic.parse_file_as(list[CitySchema], config.cities_file)
         assert len(cities_from_file) == amount
+
+    def test_fetch_cities_zero_cities_amount_rises(
+        self, monkeypatch: pytest.MonkeyPatch
+    ):
+        monkeypatch.setattr(CONFIG, 'cities_amount', 0)
+
+        # the same as InitCities - Fetch cities will rise NoDataErro for 0 cities amount
+        with pytest.raises(NoDataError):
+            FetchCities().exicute()
 
     ####################################################################################
     # Fetch Coordinates Service
@@ -99,7 +101,7 @@ class TestServices:
     # Fetch Weather Service
     ####################################################################################
 
-    def test_fetch_weathe_rises(self):
+    def test_fetch_weather_rises(self):
         with pytest.raises(NoDataError):
             FetchWeather()
 
@@ -142,7 +144,6 @@ class TestServices:
 
     def test_collect_weather_with_cities_at_db(
         self,
-        config: CollectorConfig,
         cities_list: list,
         seed_cities_to_database,
         session: orm.Session,
@@ -157,6 +158,6 @@ class TestServices:
     ####################################################################################
 
     def test_repost_weather(self, seed_cities_to_database, session: orm.Session):
-        CollectScheduler(repeats=2).exicute()
+        CollectScheduler(repeats=1).exicute()
         ReportWeather(average=True, latest=True).exicute()
         ...

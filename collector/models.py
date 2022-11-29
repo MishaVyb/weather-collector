@@ -74,7 +74,11 @@ class MeasurementModel(BaseModel):
         db.ForeignKey('city.id', onupdate='CASCADE', ondelete='CASCADE'),
         nullable=False,
     )
-    measure_at: datetime = db.Column(db.DateTime, nullable=False, comment='Time of data forecasted. UTC. Do not confuse with base model `created_at` field.')
+    measure_at: datetime = db.Column(
+        db.DateTime,
+        nullable=False,
+        comment='Time of data forecasted. UTC. Do not confuse with base model `created_at` field.',
+    )
     main: MainWeatherDataModel = orm.relationship(
         'MainWeatherDataModel',
         uselist=False,
@@ -105,13 +109,29 @@ class MainWeatherDataModel(BaseModel):
     measurement_id = db.Column(db.Integer, db.ForeignKey('weather_measurement.id'))
 
     temp: float = db.Column(db.Float, comment='Temperature. Celsius.')
-    feels_like: float = db.Column(db.Float, comment='This temperature parameter accounts for the human perception of weather. Celsius.')
-    temp_min: float = db.Column(db.Float, comment='Minimum temperature at the moment. This is minimal currently observed temperature (within large megalopolises and urban areas). Celsius.')
-    temp_max: float = db.Column(db.Float, comment='Maximum temperature at the moment. This is maximal currently observed temperature (within large megalopolises and urban areas). Celsius.')
-    pressure: int = db.Column(db.Integer, comment='Atmospheric pressure (on the sea level, if there is no sea_level or grnd_level). hPa.')
+    feels_like: float = db.Column(
+        db.Float,
+        comment='This temperature parameter accounts for the human perception of weather. Celsius.',
+    )
+    temp_min: float = db.Column(
+        db.Float,
+        comment='Minimum temperature at the moment. This is minimal currently observed temperature (within large megalopolises and urban areas). Celsius.',
+    )
+    temp_max: float = db.Column(
+        db.Float,
+        comment='Maximum temperature at the moment. This is maximal currently observed temperature (within large megalopolises and urban areas). Celsius.',
+    )
+    pressure: int = db.Column(
+        db.Integer,
+        comment='Atmospheric pressure (on the sea level, if there is no sea_level or grnd_level). hPa.',
+    )
     humidity: int = db.Column(db.Integer, comment='Humidity. %')
-    sea_level: int = db.Column(db.Integer, comment='Atmospheric pressure on the sea level. hPa.')
-    grnd_level: int = db.Column(db.Integer, comment='Atmospheric pressure on the ground level. hPa.')
+    sea_level: int = db.Column(
+        db.Integer, comment='Atmospheric pressure on the sea level. hPa.'
+    )
+    grnd_level: int = db.Column(
+        db.Integer, comment='Atmospheric pressure on the ground level. hPa.'
+    )
 
 
 class ExtraWeatherDataModel(BaseModel):

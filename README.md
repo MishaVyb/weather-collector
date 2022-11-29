@@ -86,7 +86,7 @@
 
 3. Build and run docker compose by predefined `make` command.
     ```sh
-    $ make start
+    $ make app
     ```
     > WARNING! <br>
     > If database connection fails, try again in a few seconds. It could be because postress server is not running yet.

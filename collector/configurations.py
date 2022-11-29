@@ -1,10 +1,11 @@
 import logging
 from pprint import pformat
+
 import pydantic
 
 from collector.functools import init_logger
 
-logger = init_logger(__name__, level=logging.DEBUG)
+logger = init_logger(__name__, level=logging.INFO)
 
 
 class DatabaseConfig(pydantic.BaseModel):

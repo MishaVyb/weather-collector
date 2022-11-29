@@ -1,72 +1,73 @@
 from __future__ import annotations
-import functools
 
-from typing import Callable, ClassVar, Type
+import functools
+import inspect
+from typing import Callable, Type
 
 import pydantic
 import sqlalchemy as db
 import sqlalchemy.orm as orm
-from collector.configurations import CONFIG, SQLiteDatabaseConfig
 
+from collector.configurations import CONFIG
 from collector.functools import init_logger
 from collector.models import BaseModel
 
 logger = init_logger(__name__)
 
-def safe_transaction(func: Callable):
-    @functools.wraps(func)
-    def wrapper(self: DBSessionMixin, *args, **kwargs):
+
+def safe_transaction(wrapped: Callable):
+    @functools.wraps(wrapped)
+    def wrapper(*args, **kwargs):
+        # do not specify self as wrapper's argumtn,
+        # otherwise functools.wraps won't work how it should
+        if not args and isinstance(args[0], DBSessionMixin):
+            raise TypeError(f'{wrapped} missing required positional argument: \'self\'')
+        self = args[0]
+
         try:
-            return func(self, *args, **kwargs)
-        except:
+            return wrapped(*args, **kwargs)
+        except Exception as e:
+            logger.warning(f'Transaction is rolling back. Exeption: {e}')
             self.session.rollback()
-            raise
+            raise e
+
     return wrapper
 
 
-class DBSessionMixin:
+class SafeTransactionMeta(type):
+    def __new__(cls, clsname: str, bases: tuple, attrs: dict):
+        for key, value in attrs.items():
+            if inspect.isfunction(value):
+                attrs[key] = safe_transaction(value)
+        return type.__new__(cls, clsname, bases, attrs)
+
+
+class DBSessionMixin(metaclass=SafeTransactionMeta):
     """
     Mixin for handling usal CRUD operations with database.
     Session is opening at class init and closing when `save()` is called. For commit any
     changes `save()` method must by called.
     """
 
-    sessison_class: Type[orm.Session] | None = None
+    engine: db.engine.Engine
     config = CONFIG.db
 
     def __init__(self) -> None:
-        logger.info(f'Establishing connection to database:: {self.config.url}')
-        if isinstance(self.config, SQLiteDatabaseConfig):
-            # [FIXME]
-            # for SQLite we have to establish connection every time for every thread
+        logger.info(f'Establishing connection to database: {self.config.url}')
+        self.engine = db.create_engine(self.config.url, future=True)
+        self.session = orm.Session(self.engine)
 
-            engine = db.create_engine(self.config.url, future=True)
-            connection = engine.connect()
-            DBSessionMixin.sessison_class = orm.sessionmaker(bind=connection)
-
-        elif not DBSessionMixin.sessison_class:
-            engine = db.create_engine(self.config.url)
-            connection = engine.connect()
-            DBSessionMixin.sessison_class = orm.sessionmaker(bind=connection)
-
-        assert callable(DBSessionMixin.sessison_class), 'Check database configuration'
-        self.session = DBSessionMixin.sessison_class()
-
-    @safe_transaction
     def query(self, model_class: Type[BaseModel]):
         return self.session.query(model_class)
 
-    @safe_transaction
     def create(self, *instances: BaseModel):
         self.session.add_all(instances)
 
-    @safe_transaction
     def create_from_schema(
         self, model_class: Type[BaseModel], *instances: pydantic.BaseModel
     ):
         self.create(*[model_class(**instance.dict()) for instance in instances])
 
-    @safe_transaction
     def delete(self, obj: BaseModel | Type[BaseModel]):
         """
         Delete one model instance. Or all records at table if `obj` is a Model Class.
@@ -77,8 +78,9 @@ class DBSessionMixin:
             return self.session.query(obj).delete()
         raise ValueError
 
-    @safe_transaction
     def save(self):
+        """
+        Commit transaction and close session.
+        """
         self.session.commit()
         self.session.close()
-        self.session.rollback()

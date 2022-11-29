@@ -5,20 +5,16 @@ import sys
 from datetime import datetime, timedelta
 
 import pydantic
+from apscheduler.schedulers.blocking import BlockingScheduler
 
 from collector.configurations import CONFIG
 from collector.exeptions import CollectorBaseExeption, NoDataError
 from collector.functools import init_logger
-from collector.models import (
-    CityModel,
-    ExtraWeatherDataModel,
-    MainWeatherDataModel,
-    MeasurementModel,
-)
+from collector.models import (CityModel, ExtraWeatherDataModel,
+                              MainWeatherDataModel, MeasurementModel)
 from collector.services.base import BaseSerivce, FetchServiceMixin
 from collector.services.cities import FetchCities, FetchCoordinates, InitCities
 from collector.session import DBSessionMixin
-from apscheduler.schedulers.blocking import BlockingScheduler
 
 logger = init_logger(__name__)
 
@@ -241,6 +237,8 @@ class ReportWeather(BaseSerivce, DBSessionMixin):
         for method in self.methods:
             self.output.write(method())
             self.output.write('\n')
+
+        self.session.close()
 
     def get_basic(self):
         n_cites = self.query(CityModel).count()

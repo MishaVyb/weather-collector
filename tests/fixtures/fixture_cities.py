@@ -1,11 +1,11 @@
 import json
-import pytest
 
+import pytest
 import sqlalchemy.orm as orm
-from collector.functools import init_logger
+
 from collector import models
 from collector.configurations import CollectorConfig
-
+from collector.functools import init_logger
 
 logger = init_logger(__name__)
 

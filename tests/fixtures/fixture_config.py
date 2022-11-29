@@ -1,28 +1,52 @@
 import os
+
+import pydantic
 import pytest
 
+from collector.configurations import (CONFIG, CollectorConfig, DatabaseConfig,
+                                      SQLiteDatabaseConfig)
 from collector.functools import init_logger
-from collector.configurations import CollectorConfig, CONFIG
-
 
 logger = init_logger(__name__)
 
 TEST_CITIES_FILE = os.path.join(os.path.dirname(__file__), 'testcities.json')
+TEST_DB_FILE = os.path.join(os.path.dirname(__file__), 'testdb.sqlite3')
 
 
-@pytest.fixture
-def config():
-    return CollectorConfig(
-        debug=True,
+@pytest.fixture(
+    scope="session",
+    params=[
+        pytest.param(SQLiteDatabaseConfig(path=TEST_DB_FILE), id='sqlite'),
+        pytest.param(
+            DatabaseConfig(
+                user='test',
+                password='test',
+                host='localhost',
+                database='test',
+            ),
+            id='postgres',
+        ),
+    ],
+)
+def config(request: pytest.FixtureRequest):
+    db_config: pydantic.BaseSettings = request.param
+    config = CollectorConfig(
+        debug=False,
         cities_amount=20,
         cities_file=TEST_CITIES_FILE,
         collect_weather_delay=0.5,
-        _env_file='tests.env'
+        retry_collect_delay=1,
+        db=db_config.dict(),
     )
+    logger.debug(f'Running tests under those configurations: {config}')
+    return config
 
 
 @pytest.fixture
 def mock_config(monkeypatch: pytest.MonkeyPatch, config: CollectorConfig):
+    """
+    Patching collector config file and restore test files ('cities.json')
+    """
     cities = config.cities_file
     if os.path.isfile(cities):
         logger.warning(f'Test begins with already existing {cities}. ')
