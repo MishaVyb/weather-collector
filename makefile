@@ -69,5 +69,5 @@ push:
 	@git status
 	@echo "Add all files listed above. Enter commit message to proceed. Ctr-C to abort."
 	@read COMMIT_MESSAGE; git add . ; git commit -m "$$COMMIT_MESSAGE"
-	git push
+	@git push
 
