@@ -57,17 +57,9 @@ format:
 	flake8 .
 
 
-# ifeq (push, $(firstword $(MAKECMDGOALS)))
-#   COMMIT_MESSAGE := $(wordlist 2,$(words $(MAKECMDGOALS)),$(MAKECMDGOALS))
-#   $(eval $(COMMIT_MESSAGE):;@:)
-# endif
-@read -p "Enter Module Name:" module; \
-    module_dir=./modules/$$module; \
-    mkdir -p $$module_dir/build
-
 push:
 	@git status
-	@echo "Add all files listed above. Enter commit message to proceed. Ctr-C to abort."
+	@echo "All files listed above will be added to commit. Enter commit message to proceed. Ctr-C to abort."
 	@read -p "Commit message: " COMMIT_MESSAGE; git add . ; git commit -m "$$COMMIT_MESSAGE"
 	@git push
 
