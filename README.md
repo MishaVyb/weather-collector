@@ -207,7 +207,7 @@
     ![Untitled (2)](https://user-images.githubusercontent.com/103563736/202989192-42b7c2cc-f939-46fc-8630-06cb9e6fee1a.jpg)
 
     `BaseService` presents basic definition for all other services.<br>
-    `DBSessionMixin` for making operations with databse.<br>
+    `DBSessionMixin` for making operations with database.<br>
     `FetchServiceMixin` for handling http requests.<br>
 
 
@@ -216,7 +216,7 @@
     When executing services, all http requests runs synchronously. It takes a lot of time and hold processing execution. It's better to make them in async way to reach more speed.
 
 2. Cities names unique constraint <br>
-    When calling for `InitCites` service, all cities descibed at `cities.json` appending to database and there are now checking for repetitions. So database may contains several cities with the same name and location.
+    When calling for `InitCites` service, all cities described at `cities.json` appending to database and there are now checking for repetitions. So database may contains several cities with the same name and location.
 
     To specify city explicitly, provide location coordinates or country code.
       ```json
