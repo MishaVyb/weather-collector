@@ -8,10 +8,10 @@ import pydantic
 from apscheduler.schedulers.blocking import BlockingScheduler
 
 from collector.configurations import CONFIG, logger
-from collector.exeptions import CollectorBaseExeption, NoDataError
+from collector.exceptions import CollectorBaseException, NoDataError
 from collector.models import (CityModel, ExtraWeatherDataModel,
                               MainWeatherDataModel, MeasurementModel)
-from collector.services.base import BaseSerivce, FetchServiceMixin
+from collector.services.base import BaseService, FetchServiceMixin
 from collector.services.cities import FetchCities, FetchCoordinates, InitCities
 from collector.session import DBSessionMixin
 
@@ -56,13 +56,13 @@ class WeatherMeasurementSchema(pydantic.BaseModel):
 
 
 class FetchWeather(
-    BaseSerivce, DBSessionMixin, FetchServiceMixin[WeatherMeasurementSchema]
+    BaseService, DBSessionMixin, FetchServiceMixin[WeatherMeasurementSchema]
 ):
     """
     Fetch weather for cities and store data into database.
     By default fetching weather for all cities from database.
 
-    Endpont detail information: https://openweathermap.org/current
+    Endpoint detail information: https://openweathermap.org/current
     """
 
     command = 'fetch_weather'
@@ -81,12 +81,12 @@ class FetchWeather(
 
         super().__init__(**kwargs)
 
-    def exicute(self):
-        super().exicute()
+    def execute(self):
+        super().execute()
         for city in self.cities:
             if not all([city.longitude, city.latitude]):
                 try:
-                    FetchCoordinates(city, **self.init_kwargs).exicute()
+                    FetchCoordinates(city, **self.init_kwargs).execute()
                 except NoDataError as e:
                     logger.warning(f'Can not get weather for {city}: {e}. Continue. ')
                     continue
@@ -119,7 +119,7 @@ class FetchWeather(
 ########################################################################################
 
 
-class CollectScheduler(BaseSerivce):
+class CollectScheduler(BaseService):
     command = 'collect'
 
     def __init__(
@@ -131,10 +131,10 @@ class CollectScheduler(BaseSerivce):
 
         if initial:
             try:
-                InitCities(**kwargs).exicute()
+                InitCities(**kwargs).execute()
             except NoDataError as e:
                 logger.warning(f'{e}. Handling by calling for {FetchCities()}.')
-                FetchCities(**kwargs).exicute()
+                FetchCities(**kwargs).execute()
 
         super().__init__(**kwargs)
 
@@ -154,8 +154,8 @@ class CollectScheduler(BaseSerivce):
             help='init cities before collecting. Usefull with -O flag',
         )
 
-    def exicute(self):
-        super().exicute()
+    def execute(self):
+        super().execute()
         self.scheduler.add_job(
             self._worker, 'interval', seconds=CONFIG.collect_weather_delay
         )
@@ -168,16 +168,16 @@ class CollectScheduler(BaseSerivce):
     def _worker(self):
         try:
             logger.info(f'\n\n\t Starting collecting weather ({self.counter}).\n')
-            FetchWeather(**self.init_kwargs).exicute()
-            logger.info('Collected successfuly. ')
+            FetchWeather(**self.init_kwargs).execute()
+            logger.info('Collected successfully. ')
             logger.info(f'Next collecting runs in {CONFIG.collect_weather_delay} sec. ')
 
-        except CollectorBaseExeption as e:
+        except CollectorBaseException as e:
             # make log and try again in a while
             #
             # [NOTE]
-            # Custom exeptions raised when response is broken or when db has not
-            # neccassery data. While this thread will be waiting for nex job exicution,
+            # Custom exceptions raised when response is broken or when db has not
+            # necessary data. While this thread will be waiting for nex job execution,
             # the reason of error could be changed by others.
             # Therefore, wa adding a new job in a scheduler.
             logger.error(
@@ -198,7 +198,7 @@ class CollectScheduler(BaseSerivce):
 ########################################################################################
 
 
-class ReportWeather(BaseSerivce, DBSessionMixin):
+class ReportWeather(BaseService, DBSessionMixin):
     command = 'report'
     output = sys.stdout
 
@@ -224,8 +224,8 @@ class ReportWeather(BaseSerivce, DBSessionMixin):
             help='report latest measured temperature for all cities',
         )
 
-    def exicute(self):
-        super().exicute()
+    def execute(self):
+        super().execute()
         for method in self.methods:
             self.output.write(method())
             self.output.write('\n')
@@ -235,7 +235,7 @@ class ReportWeather(BaseSerivce, DBSessionMixin):
         n_measure = self.query(MeasurementModel).count()
         return (
             '\n'
-            f'Collector storing {n_measure} weather measerements for {n_cites} cities.'
+            f'Collector storing {n_measure} weather measurements for {n_cites} cities.'
         )
 
     def get_avarage(self):

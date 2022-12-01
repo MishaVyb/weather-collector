@@ -3,15 +3,15 @@ import sys
 from apscheduler.schedulers.blocking import BlockingScheduler
 
 from collector.configurations import logger
-from collector.services import BaseSerivce
+from collector.services import BaseService
 
 
 def hold():
     try:
-        BaseSerivce.manage_services(['--help'])
+        BaseService.manage_services(['--help'])
     except (KeyboardInterrupt, SystemExit):
-        # --help command is raising exit exeption
-        # catch it to hold our program exicution
+        # --help command is raising exit exception
+        # catch it to hold our program execution
         pass
     finally:
         logger.info('Processing is holding. Press Ctr-C to exit.')
@@ -22,8 +22,8 @@ def hold():
 def main():
     options = sys.argv[1:]  # the first arg is a 'manage.py', skipping it
     if options:
-        service = BaseSerivce.manage_services(options)
-        service.exicute()
+        service = BaseService.manage_services(options)
+        service.execute()
     else:
         hold()
 

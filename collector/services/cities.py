@@ -8,9 +8,9 @@ import unicodedata
 import pydantic
 
 from collector.configurations import CONFIG, logger
-from collector.exeptions import NoDataError
+from collector.exceptions import NoDataError
 from collector.models import CityModel
-from collector.services.base import BaseSerivce, FetchServiceMixin
+from collector.services.base import BaseService, FetchServiceMixin
 from collector.session import DBSessionMixin
 
 ########################################################################################
@@ -55,7 +55,7 @@ class CityCoordinatesSchema(pydantic.BaseModel):
 ########################################################################################
 
 
-class InitCities(BaseSerivce, DBSessionMixin):
+class InitCities(BaseService, DBSessionMixin):
     """
     Load cities list from JSON file and appended them to database.
     If `predefined` is provided, that list will be used instead.
@@ -79,8 +79,8 @@ class InitCities(BaseSerivce, DBSessionMixin):
             help='set all other cities at DB not to be tracking for weather collecting',
         )
 
-    def exicute(self):
-        super().exicute()
+    def execute(self):
+        super().execute()
         cities = self.predefined or self.load_from_file()
         if not cities:
             raise NoDataError(f'{CONFIG.cities_file} has no cities to initialize. ')
@@ -106,7 +106,7 @@ class InitCities(BaseSerivce, DBSessionMixin):
 ########################################################################################
 
 
-class FetchCities(BaseSerivce, FetchServiceMixin[CitiesListSchema]):
+class FetchCities(BaseService, FetchServiceMixin[CitiesListSchema]):
     """
     Fetch cities list from GeoDB API, save them to JSON file for future custom
     configuration and call for `InitCities` service to store all new cities at database.
@@ -120,7 +120,7 @@ class FetchCities(BaseSerivce, FetchServiceMixin[CitiesListSchema]):
     # [NOTE]
     # We are using GeoDB API Service under FREE plan provided at specified url.
     # Unfortunately, in that case limit params is restricted up to 10.
-    # And for insntace we need make request 5 times to get 50 cityes.
+    # And for instance we need make request 5 times to get 50 cityes.
     restricted_limit = 10
     params = {
         'sort': '-population',
@@ -129,17 +129,17 @@ class FetchCities(BaseSerivce, FetchServiceMixin[CitiesListSchema]):
     }
     schema = CitiesListSchema
 
-    def exicute(self):
-        super().exicute()
+    def execute(self):
+        super().execute()
         cities = self.fetch()
         self.append_to_file(cities)
         logger.info(
-            f'Sucessfully fethed {CONFIG.cities_amount} cities and stored them at '
+            f'Successfully fetched {CONFIG.cities_amount} cities and stored them at '
             f'{CONFIG.cities_file} file. Go there to confirm results. You can make any '
             'changes and commit them by calling for `init_cities` with --override flag.'
         )
 
-        InitCities(predefined=cities, **self.init_kwargs).exicute()
+        InitCities(predefined=cities, **self.init_kwargs).execute()
 
     def fetch(self):
         cities: list[CitySchema] = []
@@ -164,7 +164,7 @@ class FetchCities(BaseSerivce, FetchServiceMixin[CitiesListSchema]):
     def append_to_file(self, cities: list[CitySchema]):
         if os.path.isfile(CONFIG.cities_file):
             logger.warning(
-                f'{CONFIG.cities_file} already exists. All data will be overriden. '
+                f'{CONFIG.cities_file} already exists. All data will be overridden. '
             )
 
         with open(CONFIG.cities_file, 'w+', encoding='utf-8') as file:
@@ -177,19 +177,19 @@ class FetchCities(BaseSerivce, FetchServiceMixin[CitiesListSchema]):
 
 
 class FetchCoordinates(
-    BaseSerivce,
+    BaseService,
     DBSessionMixin,
     FetchServiceMixin[list[CityCoordinatesSchema]],
 ):
     """
     If city object doesn't have coordinates, we should get them by calling for
-    Open Weather Geocoding API. The API documantation says:
+    Open Weather Geocoding API. The API documentation says:
 
     `Please use Geocoder API if you need automatic convert city names and zip-codes to
     geo coordinates and the other way around. Please note that API requests by city
     name, zip-codes and city id have been deprecated.`
 
-    Endpont detail information: https://openweathermap.org/api/geocoding-api
+    Endpoint detail information: https://openweathermap.org/api/geocoding-api
     """
 
     command = 'fetch_coordinates'
@@ -211,8 +211,8 @@ class FetchCoordinates(
         self.params['q'] = f'{self.city.name},{self.city.countryCode}'
         super().__init__(**kwargs)
 
-    def exicute(self):
-        super().exicute()
+    def execute(self):
+        super().execute()
 
         geo_list = self.fetch()
         if not geo_list:

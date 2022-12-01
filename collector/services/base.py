@@ -8,7 +8,7 @@ import pydantic
 import requests
 
 from collector.configurations import CONFIG, logger
-from collector.exeptions import ResponseError, ResponseSchemaError
+from collector.exceptions import ResponseError, ResponseSchemaError
 
 _SchemaType = TypeVar(
     '_SchemaType',
@@ -20,7 +20,7 @@ Also bound to Iterable, because JSON response could be a `list[pydantic.BaseMode
 """
 
 
-class BaseSerivce:
+class BaseService:
     command: str = 'service'
     "Command name to run service in command line. "
 
@@ -35,23 +35,23 @@ class BaseSerivce:
         services_description = '\n'.join(
             [
                 f'{service.command}:\n\t{service.__doc__}'
-                for service in BaseSerivce.__subclasses__()
+                for service in BaseService.__subclasses__()
             ]
         )
         logger.debug(services_description)
 
         parser = argparse.ArgumentParser(description='Weather Collector. ')
         parser.add_argument(
-            BaseSerivce.command,
+            BaseService.command,
             type=str,
             help='service to proceed',
-            choices=[service.command for service in BaseSerivce.__subclasses__()],
+            choices=[service.command for service in BaseService.__subclasses__()],
         )
-        for service in BaseSerivce.__subclasses__():
+        for service in BaseService.__subclasses__():
             service.add_argument(parser)
 
         args = parser.parse_args(argv)
-        service_class = BaseSerivce.get_service(command=args.service)
+        service_class = BaseService.get_service(command=args.service)
         return service_class(**dict(args._get_kwargs()))
 
     @staticmethod
@@ -60,7 +60,7 @@ class BaseSerivce:
         Get collector service by provided command name.
         """
         filtered = filter(
-            lambda service: service.command == command, BaseSerivce.__subclasses__()
+            lambda service: service.command == command, BaseService.__subclasses__()
         )
         try:
             return next(filtered)
@@ -71,7 +71,7 @@ class BaseSerivce:
     def add_argument(cls, parser: argparse.ArgumentParser):
         pass
 
-    def exicute(self):
+    def execute(self):
         logger.info(f'{self} is running. ')
 
     def __str__(self) -> str:

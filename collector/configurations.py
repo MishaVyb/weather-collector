@@ -38,13 +38,13 @@ class SQLiteDatabaseConfig(pydantic.BaseModel):
 class CollectorConfig(pydantic.BaseSettings):
     """
     debug: `bool`
-        true: forse using SQLite instead of postgreSQL (even if it defined at .env)
+        true: force using SQLite instead of postgreSQL (even if it defined at .env)
     cities_amount: `int` = 50
-        Amount for auto-inital cities list by fetching them from GeoDB.
+        Amount for auto-initial cities list by fetching them from GeoDB.
     cities_file: `str` = 'cities.json'
-        File to descibe which cities weather collector fetching data for.
+        File to describe which cities weather collector fetching data for.
     collect_weather_delay: `float` = 1 * 60 * 60
-        Delay between every weather measurement. Seconds. Dafault: 1 hour.
+        Delay between every weather measurement. Seconds. Default: 1 hour.
     open_weather_key: `str`
         Open Weather API key. Open Weather could be used under FREE plan. Restrictions:
         - 60 calls/minute
@@ -71,26 +71,26 @@ class CollectorConfig(pydantic.BaseSettings):
         if not isinstance(db, dict):
             return values
 
-        # at this point we can not check is posgress variables was loaded
+        # at this point we can not check is postgres variables was loaded
         # because they could be uploaded from 'prod.env' but we are using 'debug.env'.
-        # therefore for debug mode sqlite is alwase used.
+        # therefore for debug mode sqlite is always used.
         if values.get('debug'):
             for field in DatabaseConfig.__fields__:
                 db.pop(field, None)
         return db
 
     @pydantic.root_validator(pre=True)
-    def make_config_fields_equal_to_postrges_variables(cls, values: dict):
+    def make_config_fields_equal_to_postgres_variables(cls, values: dict):
         db: dict = values.get('db', {})
         if not isinstance(db, dict):
             return values
 
-        for config_field, postrges_field in zip(
+        for config_field, postgres_field in zip(
             ['POSTGRES_USER', 'POSTGRES_PASSWORD', 'POSTGRES_DB', 'POSTGRES_HOST'],
             ['user', 'password', 'database', 'host'],
         ):
-            if values.get(postrges_field):
-                db.setdefault(config_field, values.get(postrges_field))
+            if values.get(postgres_field):
+                db.setdefault(config_field, values.get(postgres_field))
 
         values['db'] = db
         return values

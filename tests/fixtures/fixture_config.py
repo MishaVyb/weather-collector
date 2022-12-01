@@ -23,6 +23,7 @@ TEST_DB_FILE = os.path.join(os.path.dirname(__file__), 'testdb.sqlite3')
                 database='test',
             ),
             id='postgres',
+            marks=pytest.mark.postgres,
         ),
     ],
 )

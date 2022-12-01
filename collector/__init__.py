@@ -1,4 +1,4 @@
-__all__ = ['configurations', 'session', 'exeptions', 'functools', 'models']
+__all__ = ['configurations', 'session', 'exceptions', 'functools', 'models']
 
-from . import configurations, exeptions, functools, models, session
+from . import configurations, exceptions, functools, models, session
 from .configurations import logger

@@ -87,7 +87,7 @@ class MeasurementModel(BaseModel):
     )
 
     # [NOTE]
-    # Other fields can be handled here as one-to-one relation to seperate table, if
+    # Other fields can be handled here as one-to-one relation to separate table, if
     # the reason is appear in a future.
     ...
 

@@ -18,6 +18,6 @@ logger = init_logger('pytest', 'DEBUG')
 @pytest.fixture(autouse=True)
 def new_line():
     """
-    Fixture simple makes new line to seperate each test logging ouput.
+    Fixture simple makes new line to separate each test logging output.
     """
     print('\n')

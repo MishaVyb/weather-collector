@@ -15,7 +15,7 @@ try:
     logger.info(f'Establishing connection to database: {CONFIG.db.url}')
     engine = db.create_engine(CONFIG.db.url, future=True, echo=CONFIG.db.echo)
 except Exception as e:
-    logger.critical(f'Connection failed. Check your databbase is running: {CONFIG.db}')
+    logger.critical(f'Connection failed. Check your database is running: {CONFIG.db}')
     raise e
 
 
@@ -31,7 +31,7 @@ def safe_transaction(wrapped: Callable):
         try:
             return wrapped(*args, **kwargs)
         except Exception as e:
-            logger.debug(f'Transaction is rolling back. Exeption: {e}')
+            logger.debug(f'Transaction is rolling back. Exception: {e}')
             self.session.rollback()
             raise e
 
@@ -40,17 +40,18 @@ def safe_transaction(wrapped: Callable):
 
 class DBSessionMeta(type):
     """
-    Create class wich operating as session context manager.
+    Create class which operates as session context manager.
 
     Meta is for wrapping all class methods into `safe_transaction` decorator.
-    And for wrappping enter methond for `Session()` openning and exit method for
+    And for wrapping enter method for `Session()` opening and exit method for
     `session.commit()`, `session.close()`.
     """
 
     session_enter_method = '__init__'
-    session_exit_method = 'exicute'
+    session_exit_method = 'execute'
 
     def __new__(cls, clsname: str, bases: tuple, attrs: dict):
+        ...
         for key, value in attrs.items():
             if inspect.isfunction(value):
                 attrs[key] = safe_transaction(value)
@@ -87,16 +88,12 @@ class DBSessionMeta(type):
 
 class DBSessionMixin(metaclass=DBSessionMeta):
     """
-    Mixin for handling usal CRUD operations with database.
+    Mixin for handling usual CRUD operations with database.
     Session is opening at class init and closing when `save()` is called. For commit any
     changes `save()` method must by called.
     """
 
     session: orm.Session
-
-    # def __init__(self) -> None:
-    #     logger.debug(f'Session are opening with {engine=}')
-    #     self.session = orm.Session(engine)
 
     def query(self, model_class: Type[BaseModel]):
         return self.session.query(model_class)

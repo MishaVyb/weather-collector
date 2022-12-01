@@ -3,7 +3,7 @@ import pytest
 import sqlalchemy.orm as orm
 
 from collector.configurations import CONFIG, CollectorConfig
-from collector.exeptions import NoDataError
+from collector.exceptions import NoDataError
 from collector.models import CityModel, MeasurementModel
 from collector.services.cities import (CitySchema, FetchCities,
                                        FetchCoordinates, InitCities)
@@ -20,14 +20,14 @@ class TestServices:
 
     def test_init_cities_no_file_rises(self):
         with pytest.raises(NoDataError):
-            InitCities().exicute()
+            InitCities().execute()
 
     def test_init_cities_broken_file_rises(self, broken_cities_file):
         with pytest.raises(pydantic.ValidationError):
-            InitCities().exicute()
+            InitCities().execute()
 
     def test_init_cities_(self, session: orm.Session, cities_file: list):
-        InitCities().exicute()
+        InitCities().execute()
         assert session.query(CityModel).count() == len(cities_file)
 
     ####################################################################################
@@ -46,9 +46,9 @@ class TestServices:
         cities_names: list[str],
     ):
         """
-        Test that biggest world cities apper in DB.
+        Test that biggest world cities appear in DB.
         """
-        FetchCities().exicute()
+        FetchCities().execute()
         for city in cities_names:
             assert session.query(CityModel).filter(CityModel.name == city).all()
 
@@ -69,7 +69,7 @@ class TestServices:
     ):
         monkeypatch.setattr(CONFIG, 'cities_amount', amount)
 
-        FetchCities().exicute()
+        FetchCities().execute()
 
         assert session.query(CityModel).count() == amount
         cities_from_file = pydantic.parse_file_as(list[CitySchema], config.cities_file)
@@ -80,9 +80,9 @@ class TestServices:
     ):
         monkeypatch.setattr(CONFIG, 'cities_amount', 0)
 
-        # the same as InitCities - Fetch cities will rise NoDataErro for 0 cities amount
+        # the same as InitCities - FetchCities will rise NoDataError for 0 cities amount
         with pytest.raises(NoDataError):
-            FetchCities().exicute()
+            FetchCities().execute()
 
     ####################################################################################
     # Fetch Coordinates Service
@@ -91,7 +91,7 @@ class TestServices:
     def test_fetch_coordinates(self, seed_cities_to_database, session: orm.Session):
         cites: list[CityModel] = session.query(CityModel).all()
         for city in cites:
-            FetchCoordinates(city).exicute()
+            FetchCoordinates(city).execute()
             assert city.latitude and city.longitude
 
     ####################################################################################
@@ -103,7 +103,7 @@ class TestServices:
             FetchWeather()
 
     def test_fetch_weather(self, seed_cities_to_database, session: orm.Session):
-        FetchWeather().exicute()
+        FetchWeather().execute()
         measures: list[MeasurementModel] = session.query(MeasurementModel).all()
         for measure in measures:
             assert measure.main
@@ -124,7 +124,7 @@ class TestServices:
         cities_amount = 3
         monkeypatch.setattr(CONFIG, 'cities_amount', cities_amount)
 
-        CollectScheduler(repeats=repeats, initial=True).exicute()
+        CollectScheduler(repeats=repeats, initial=True).execute()
         assert session.query(MeasurementModel).count() == cities_amount * repeats
 
     def test_collect_weather_initial_many_cities(
@@ -136,7 +136,7 @@ class TestServices:
         cities_amount = 50
         monkeypatch.setattr(CONFIG, 'cities_amount', cities_amount)
 
-        CollectScheduler(repeats=repeats, initial=True).exicute()
+        CollectScheduler(repeats=repeats, initial=True).execute()
         assert session.query(MeasurementModel).count() == cities_amount * repeats
 
     def test_collect_weather_with_cities_at_db(
@@ -147,7 +147,7 @@ class TestServices:
         monkeypatch: pytest.MonkeyPatch,
     ):
         repeats = 2
-        CollectScheduler(repeats=repeats).exicute()
+        CollectScheduler(repeats=repeats).execute()
         assert session.query(MeasurementModel).count() == len(cities_list) * repeats
 
     ####################################################################################
@@ -155,6 +155,6 @@ class TestServices:
     ####################################################################################
 
     def test_report_weather(self, seed_cities_to_database, session: orm.Session):
-        CollectScheduler(repeats=1).exicute()
-        ReportWeather(average=True, latest=True).exicute()
+        CollectScheduler(repeats=1).execute()
+        ReportWeather(average=True, latest=True).execute()
         ...

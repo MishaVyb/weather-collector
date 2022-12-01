@@ -6,7 +6,7 @@ def init_logger(
     name: str, level: int | Literal['DEBUG', 'INFO', 'WARNING', 'ERROR'] = logging.INFO
 ):
     """
-    Cinfigurate and get logger by provided name.
+    Configure and get logger by provided name.
     """
     if isinstance(level, str):
         level = getattr(logging, level)
