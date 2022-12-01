@@ -18,32 +18,10 @@ app:
 	make collecting
 
 
-
-
 ######################################################################
 # development tools
 ######################################################################
 
-.PHONY: venv	# to ignore such folder makefile get deal with
-venv: ver := 3.10
-venv: msg1 := "Vertual envirement already exist. Should be activated."
-venv: msg2 := "Vertual envirement created. Activate it to use."
-venv:
-	@if [ -d "./venv/" ]; \
-		then echo "$(msg1)"; \
-		else \
-			python$(ver) -m venv venv; \
-			echo "$(msg2)"; \
-	fi;
-
-
-install:
-	@echo "Is vertual envirement activated? (venv) "
-	@echo "Enter to proceed. Ctr-C to abort."
-	@read
-	@pip3 install --upgrade pip;
-	pip install black mypy autoflake isort
-	pip install flake8 pep8-naming flake8-broken-line flake8-return flake8-isort
 
 format:
 	@autoflake --remove-all-unused-imports -vv --ignore-init-module-imports -r .

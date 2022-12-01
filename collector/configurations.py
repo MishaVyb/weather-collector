@@ -5,19 +5,18 @@ import pydantic
 
 from collector.functools import init_logger
 
-logger = init_logger(__name__, level=logging.INFO)
+logger = init_logger('weather-collector', 'DEBUG')
 
 
 class DatabaseConfig(pydantic.BaseModel):
     dialect: str = 'postgresql'
-    driver: str | None = 'psycopg2'  # if None default db driver will be used
+    driver: str | None = 'psycopg2'
     user: str
     password: str
-
-    # service name ('db') if running at docker-compose or 'localhost' if running localy
     host: str = 'db'
     port: int = 5432
     database: str = 'default'
+    echo: bool = False
 
     @property
     def url(self):
@@ -30,6 +29,7 @@ class DatabaseConfig(pydantic.BaseModel):
 
 class SQLiteDatabaseConfig(pydantic.BaseModel):
     path: str = 'db.sqlite3'
+    echo: bool = False
 
     @property
     def url(self):
@@ -38,6 +38,8 @@ class SQLiteDatabaseConfig(pydantic.BaseModel):
 
 class CollectorConfig(pydantic.BaseSettings):
     """
+    debug: `bool`
+        true: forse using SQLite instead of postgreSQL (even if it defined at .env)
     cities_amount: `int` = 50
         Amount for auto-inital cities list by fetching them from GeoDB.
     cities_file: `str` = 'cities.json'
@@ -45,8 +47,7 @@ class CollectorConfig(pydantic.BaseSettings):
     collect_weather_delay: `float` = 1 * 60 * 60
         Delay between every weather measurement. Seconds. Dafault: 1 hour.
     open_weather_key: `str`
-        Open Weather API key. Default key is getting access for Open Weather under FREE
-        plan and should be used only for demonstration porpuses. Restrictions:
+        Open Weather API key. Open Weather could be used under FREE plan. Restrictions:
         - 60 calls/minute
         - 1,000,000 calls/month
     """

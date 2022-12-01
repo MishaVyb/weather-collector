@@ -8,17 +8,24 @@ import pydantic
 import sqlalchemy as db
 import sqlalchemy.orm as orm
 
-from collector.configurations import CONFIG
-from collector.functools import init_logger
+from collector.configurations import CONFIG, DatabaseConfig
+
 from collector.models import BaseModel
 
-logger = init_logger(__name__)
+from collector.configurations import logger
+
+try:
+    logger.info(f'Establishing connection to database: {CONFIG.db.url}')
+    engine = db.create_engine(CONFIG.db.url, future=True, echo=CONFIG.db.echo)
+except Exception as e:
+    logger.critical(f'Connection failed. Check your databbase is running: {CONFIG.db}')
+    raise e
 
 
 def safe_transaction(wrapped: Callable):
     @functools.wraps(wrapped)
     def wrapper(*args, **kwargs):
-        # do not specify self as wrapper's argumtn,
+        # do not specify self as wrapper's argument,
         # otherwise functools.wraps won't work how it should
         if not args and isinstance(args[0], DBSessionMixin):
             raise TypeError(f'{wrapped} missing required positional argument: \'self\'')
@@ -49,13 +56,9 @@ class DBSessionMixin(metaclass=SafeTransactionMeta):
     changes `save()` method must by called.
     """
 
-    engine: db.engine.Engine
-    config = CONFIG.db
-
     def __init__(self) -> None:
-        logger.info(f'Establishing connection to database: {self.config.url}')
-        self.engine = db.create_engine(self.config.url, future=True)
-        self.session = orm.Session(self.engine)
+        logger.debug(f'Session are opening with {engine=}')
+        self.session = orm.Session(engine)
 
     def query(self, model_class: Type[BaseModel]):
         return self.session.query(model_class)

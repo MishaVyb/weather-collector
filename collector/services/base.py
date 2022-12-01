@@ -7,11 +7,12 @@ from typing import Generic, Iterable, Type, TypeVar
 import pydantic
 import requests
 
+from collector.configurations import logger
 from collector.configurations import CONFIG
 from collector.exeptions import ResponseError, ResponseSchemaError
-from collector.functools import init_logger
 
-logger = init_logger(__name__)
+
+
 
 _SchemaType = TypeVar(
     '_SchemaType',

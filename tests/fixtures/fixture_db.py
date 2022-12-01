@@ -7,19 +7,11 @@ import sqlalchemy.orm as orm
 
 from collector import models
 from collector.configurations import CollectorConfig
-from collector.functools import init_logger
+
 from collector.session import DBSessionMixin
+import collector
 
-logger = init_logger(__name__, logging.DEBUG)
-
-
-@pytest.fixture
-def mock_database_config(
-    monkeypatch: pytest.MonkeyPatch,
-    config: CollectorConfig,
-):
-    logger.debug('mock_database_config fixture')
-    monkeypatch.setattr(DBSessionMixin, 'config', config.db)
+from tests import logger
 
 
 @pytest.fixture  # (scope="session")
@@ -28,8 +20,14 @@ def engine(config: CollectorConfig):
     return db.create_engine(config.db.url, future=True, echo=False)
 
 
+@pytest.fixture
+def patch_engine(monkeypatch: pytest.MonkeyPatch, engine: db.engine.Engine):
+    logger.debug('patch_engine fixture')
+    monkeypatch.setattr(collector.session, 'engine', engine)
+
+
 @pytest.fixture  # (scope="session")
-def setup_database(engine: db.engine.Engine, mock_database_config):
+def setup_database(engine: db.engine.Engine, patch_engine):
     logger.debug('setup_database fixture')
 
     models.Base.metadata.drop_all(engine)  # clear leftovers from previous broken tests

@@ -2,10 +2,10 @@ import sys
 
 from apscheduler.schedulers.blocking import BlockingScheduler
 
-from collector.functools import init_logger
+from collector.configurations import logger
 from collector.services import BaseSerivce
 
-logger = init_logger(__name__)
+
 
 
 def hold():

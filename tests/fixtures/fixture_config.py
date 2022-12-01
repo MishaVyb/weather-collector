@@ -1,3 +1,4 @@
+import logging
 import os
 
 import pydantic
@@ -5,9 +6,9 @@ import pytest
 
 from collector.configurations import (CONFIG, CollectorConfig, DatabaseConfig,
                                       SQLiteDatabaseConfig)
-from collector.functools import init_logger
 
-logger = init_logger(__name__)
+
+from tests import logger
 
 TEST_CITIES_FILE = os.path.join(os.path.dirname(__file__), 'testcities.json')
 TEST_DB_FILE = os.path.join(os.path.dirname(__file__), 'testdb.sqlite3')

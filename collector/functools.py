@@ -1,10 +1,16 @@
 import logging
+from typing import Literal
 
 
-def init_logger(name: str, level: int = logging.INFO):
+def init_logger(
+    name: str, level: int | Literal['DEBUG', 'INFO', 'WARNING', 'ERROR'] = logging.INFO
+):
     """
     Cinfigurate and get logger by provided name.
     """
+    if isinstance(level, str):
+        level = getattr(logging, level)
+
     logger = logging.getLogger(name)
     logger.setLevel(level)
     handler = logging.StreamHandler()
