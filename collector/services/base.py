@@ -87,9 +87,6 @@ class FetchServiceMixin(Generic[_SchemaType]):
     schema: Type[_SchemaType]
     "Pydantic Model to parse response JSON data. Must be defined at inhereted classes. "
 
-    def exicute(self):
-        self.fetch()
-
     def fetch(self) -> _SchemaType:
         self.response = requests.get(self.url, self.params)
 

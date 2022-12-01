@@ -26,7 +26,7 @@ class TestServices:
         with pytest.raises(pydantic.ValidationError):
             InitCities().exicute()
 
-    def test_init_cities(self, session: orm.Session, cities_file: list):
+    def test_init_cities_(self, session: orm.Session, cities_file: list):
         InitCities().exicute()
         assert session.query(CityModel).count() == len(cities_file)
 
@@ -154,7 +154,7 @@ class TestServices:
     # Report Weather Service
     ####################################################################################
 
-    def test_repost_weather(self, seed_cities_to_database, session: orm.Session):
+    def test_report_weather(self, seed_cities_to_database, session: orm.Session):
         CollectScheduler(repeats=1).exicute()
         ReportWeather(average=True, latest=True).exicute()
         ...

@@ -68,8 +68,7 @@ class InitCities(BaseSerivce, DBSessionMixin):
     ) -> None:
         self.predefined = predefined
         self.override = override
-        BaseSerivce.__init__(self, **kwargs)
-        DBSessionMixin.__init__(self)
+        super().__init__(**kwargs)
 
     @classmethod
     def add_argument(cls, parser: argparse.ArgumentParser):
@@ -93,8 +92,6 @@ class InitCities(BaseSerivce, DBSessionMixin):
             logger.info(f'{len(previous)} cities are not tracked anymore. ')
 
         self.create_from_schema(CityModel, *cities)
-        self.save()
-
         logger.info(f'Add new {len(cities)} records to {CityModel}. ')
 
     def load_from_file(self):
@@ -204,10 +201,6 @@ class FetchCoordinates(
     }
 
     def __init__(self, city: CityModel | str, **kwargs) -> None:
-
-        BaseSerivce.__init__(self, **kwargs)
-        DBSessionMixin.__init__(self)
-
         if isinstance(city, str):
             self.city: CityModel = (
                 self.query(CityModel).filter(CityModel.name == city).one()
@@ -216,6 +209,7 @@ class FetchCoordinates(
             self.city = city
 
         self.params['q'] = f'{self.city.name},{self.city.countryCode}'
+        super().__init__(**kwargs)
 
     def exicute(self):
         super().exicute()
@@ -234,7 +228,6 @@ class FetchCoordinates(
         coordinates = geo_list[0]
         self.city.latitude = coordinates.lat
         self.city.longitude = coordinates.lon
-        self.save()
 
     def fetch(self):
         logger.info(f'Fetching coordinates for {self.city}. ')

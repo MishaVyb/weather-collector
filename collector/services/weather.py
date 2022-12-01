@@ -70,9 +70,6 @@ class FetchWeather(
     schema = WeatherMeasurementSchema
 
     def __init__(self, **kwargs) -> None:
-        BaseSerivce.__init__(self, **kwargs)
-        DBSessionMixin.__init__(self)
-
         self.cities: list[CityModel] = (
             self.query(CityModel).filter(CityModel.is_tracked).all()
         )
@@ -81,6 +78,8 @@ class FetchWeather(
                 'No cities at database to be tracked. '
                 f'Call for {FetchCities.command} or {InitCities.command} before. '
             )
+
+        super().__init__(**kwargs)
 
     def exicute(self):
         super().exicute()
@@ -100,7 +99,6 @@ class FetchWeather(
                 extra=ExtraWeatherDataModel(data=extra),
             )
             self.create(model)
-        self.save()
 
     def fetch(self, city: CityModel):  # type: ignore
         logger.info(f'Fetching weather for {city}. ')
@@ -211,8 +209,7 @@ class ReportWeather(BaseSerivce, DBSessionMixin):
         if latest:
             self.methods.append(self.get_latest)
 
-        BaseSerivce.__init__(self, **kwargs)
-        DBSessionMixin.__init__(self)
+        super().__init__(**kwargs)
 
     @classmethod
     def add_argument(cls, parser: argparse.ArgumentParser):
@@ -229,12 +226,9 @@ class ReportWeather(BaseSerivce, DBSessionMixin):
 
     def exicute(self):
         super().exicute()
-
         for method in self.methods:
             self.output.write(method())
             self.output.write('\n')
-
-        self.session.close()
 
     def get_basic(self):
         n_cites = self.query(CityModel).count()
