@@ -1,12 +1,10 @@
 import json
-import logging
 
 import pytest
 import sqlalchemy.orm as orm
 
 from collector import models
 from collector.configurations import CollectorConfig
-from tests import logger
 
 
 @pytest.fixture

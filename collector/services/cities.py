@@ -6,16 +6,12 @@ import os
 import unicodedata
 
 import pydantic
-from collector.configurations import logger
-from collector.configurations import CONFIG
-from collector.exeptions import NoDataError
 
+from collector.configurations import CONFIG, logger
+from collector.exeptions import NoDataError
 from collector.models import CityModel
 from collector.services.base import BaseSerivce, FetchServiceMixin
 from collector.session import DBSessionMixin
-
-
-
 
 ########################################################################################
 # Cities Schemas

@@ -7,17 +7,13 @@ from datetime import datetime, timedelta
 import pydantic
 from apscheduler.schedulers.blocking import BlockingScheduler
 
-from collector.configurations import CONFIG
+from collector.configurations import CONFIG, logger
 from collector.exeptions import CollectorBaseExeption, NoDataError
-
 from collector.models import (CityModel, ExtraWeatherDataModel,
                               MainWeatherDataModel, MeasurementModel)
 from collector.services.base import BaseSerivce, FetchServiceMixin
 from collector.services.cities import FetchCities, FetchCoordinates, InitCities
 from collector.session import DBSessionMixin
-
-from collector.configurations import logger
-
 
 ########################################################################################
 # Weather Schemas

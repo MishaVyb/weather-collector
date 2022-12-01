@@ -2,7 +2,6 @@
 Main config file for pytest.
 """
 
-import logging
 import pytest
 
 from collector.functools import init_logger

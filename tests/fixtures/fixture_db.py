@@ -1,16 +1,12 @@
-import logging
 from typing import Type
 
 import pytest
 import sqlalchemy as db
 import sqlalchemy.orm as orm
 
+import collector
 from collector import models
 from collector.configurations import CollectorConfig
-
-from collector.session import DBSessionMixin
-import collector
-
 from tests import logger
 
 

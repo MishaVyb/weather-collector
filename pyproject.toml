@@ -1,12 +1,36 @@
+[tool.mypy]
+ignore_missing_imports = true
+
 [tool.black]
 skip-string-normalization = 1       # disable converting single quote to double
 exclude = '/venv/|/alembic/'        # ignoring venv and tests folders
 # line-length = 79                  # max line length
-                                    # PEP8: 79 | black: 88 | google: 120
+
 
 [tool.isort]
-# skip_glob = '/tests/*'            # ignoring tests folders
+skip_glob = '*tmp*'            # ignoring tmp files
 
 
 [tool.autoflake]
-exclude = ['venv', 'alembic']
+exclude = ['venv', 'alembic', '*tmp*']
+
+
+[tool.flake8]
+max-line-length = 88 # PEP8: 79 | black: 88 | google: 120
+extend-ignore = [
+    'E731',    # asigment lambda to variable - okey
+    'E501',    # line too long
+               # (Black is used to forcing length to N symbols, but when it can't be done - we leave it as is)
+    'E203',    # whitespaces before slice :  seq[1 :2]
+    'N805',    # first argument of a method should be named 'self' (to handle pydantic validator methods)
+    'N815',    # because of contryCode field
+]
+per-file-ignores = [
+    '*/__init__.py:F401',  # imported but unused
+]
+exclude = [
+    'venv/*',
+    'alembic/*',
+    '*tmp*',
+    '*untitled*',
+]

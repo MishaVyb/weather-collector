@@ -6,8 +6,6 @@ from collector.configurations import logger
 from collector.services import BaseSerivce
 
 
-
-
 def hold():
     try:
         BaseSerivce.manage_services(['--help'])

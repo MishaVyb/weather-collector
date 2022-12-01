@@ -8,11 +8,8 @@ import pydantic
 import sqlalchemy as db
 import sqlalchemy.orm as orm
 
-from collector.configurations import CONFIG, DatabaseConfig
-
+from collector.configurations import CONFIG, logger
 from collector.models import BaseModel
-
-from collector.configurations import logger
 
 try:
     logger.info(f'Establishing connection to database: {CONFIG.db.url}')
