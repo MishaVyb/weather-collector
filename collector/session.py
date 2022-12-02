@@ -19,6 +19,41 @@ except Exception as e:
     raise e
 
 
+def session_enter(wrapped: Callable):
+    @functools.wraps(wrapped)
+    def wrapper(self: DBSessionMixin, *args, **kwargs):
+        self.session = orm.Session(engine)
+        logger.debug(f'Session is open with {engine=}. ')
+        return wrapped(self, *args, **kwargs)
+
+    return wrapper
+
+
+def session_exit(wrapped: Callable):
+    @functools.wraps(wrapped)
+    def wrapper(self: DBSessionMixin, *args, **kwargs):
+        result = wrapped(self, *args, **kwargs)
+        self.session.commit()
+        self.session.close()
+        logger.debug('Session is closed. ')
+        return result
+
+    return wrapper
+
+
+def safe_transaction(wrapped: Callable):
+    @functools.wraps(wrapped)
+    def wrapper(self: DBSessionMixin, *args, **kwargs):
+        try:
+            return wrapped(self, *args, **kwargs)
+        except Exception as e:
+            logger.debug(f'Transaction is rolling back. Exception: {e}')
+            self.session.rollback()
+            raise e
+
+    return wrapper
+
+
 class DBSessionMeta(type):
     """
     Create class which operates as session context manager.
@@ -34,49 +69,14 @@ class DBSessionMeta(type):
     def __new__(cls, clsname: str, bases: tuple, attrs: dict):
         for key, value in attrs.items():
             if inspect.isfunction(value):
-                attrs[key] = cls.safe_transaction(value)
+                attrs[key] = safe_transaction(value)
 
                 if key == cls.session_enter_method:
-                    attrs[key] = cls.session_enter(attrs[key])
+                    attrs[key] = session_enter(attrs[key])
                 if key == cls.session_exit_method:
-                    attrs[key] = cls.session_exit(attrs[key])
+                    attrs[key] = session_exit(attrs[key])
 
         return type.__new__(cls, clsname, bases, attrs)
-
-    @classmethod
-    def session_enter(cls, wrapped: Callable):
-        @functools.wraps(wrapped)
-        def wrapper(self: DBSessionMixin, *args, **kwargs):
-            self.session = orm.Session(engine)
-            logger.debug(f'Session is open with {engine=}. ')
-            return wrapped(self, *args, **kwargs)
-
-        return wrapper
-
-    @classmethod
-    def session_exit(cls, wrapped: Callable):
-        @functools.wraps(wrapped)
-        def wrapper(self: DBSessionMixin, *args, **kwargs):
-            result = wrapped(self, *args, **kwargs)
-            self.session.commit()
-            self.session.close()
-            logger.debug('Session is closed. ')
-            return result
-
-        return wrapper
-
-    @classmethod
-    def safe_transaction(cls, wrapped: Callable):
-        @functools.wraps(wrapped)
-        def wrapper(self: DBSessionMixin, *args, **kwargs):
-            try:
-                return wrapped(self, *args, **kwargs)
-            except Exception as e:
-                logger.debug(f'Transaction is rolling back. Exception: {e}')
-                self.session.rollback()
-                raise e
-
-        return wrapper
 
 
 class DBSessionMixin(metaclass=DBSessionMeta):
