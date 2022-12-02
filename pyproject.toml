@@ -2,17 +2,21 @@
 ignore_missing_imports = true
 
 [tool.black]
-skip-string-normalization = 1       # disable converting single quote to double
-exclude = '/venv/|/alembic/'        # ignoring venv and tests folders
 # line-length = 79                  # max line length
+skip-string-normalization = 1       # disable converting single quote to double
+# by default black exclude all .gitignore files. here is regex pattern to extend this list
+# NOTE! list of files name is not supported, only regex patterns
+# WARNING! also pass this list of files to pre-commit-config.
+extend-exclude = 'alembic/'
 
 
 [tool.isort]
 skip_glob = '*tmp*'            # ignoring tmp files
+profile = 'black'
 
 
 [tool.autoflake]
-exclude = ['venv', 'alembic', '*tmp*']
+exclude = ['venv', 'alembic', '*tmp*'] # WARNING! also pass this list of files to pre-commit-config.
 
 
 [tool.flake8]

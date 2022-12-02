@@ -9,8 +9,12 @@ from apscheduler.schedulers.blocking import BlockingScheduler
 
 from collector.configurations import CONFIG, logger
 from collector.exceptions import CollectorBaseException, NoDataError
-from collector.models import (CityModel, ExtraWeatherDataModel,
-                              MainWeatherDataModel, MeasurementModel)
+from collector.models import (
+    CityModel,
+    ExtraWeatherDataModel,
+    MainWeatherDataModel,
+    MeasurementModel,
+)
 from collector.services.base import BaseService, FetchServiceMixin
 from collector.services.cities import FetchCities, FetchCoordinates, InitCities
 from collector.session import DBSessionMixin

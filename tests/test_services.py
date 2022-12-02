@@ -5,10 +5,13 @@ import sqlalchemy.orm as orm
 from collector.configurations import CONFIG, CollectorConfig
 from collector.exceptions import NoDataError
 from collector.models import CityModel, MeasurementModel
-from collector.services.cities import (CitySchema, FetchCities,
-                                       FetchCoordinates, InitCities)
-from collector.services.weather import (CollectScheduler, FetchWeather,
-                                        ReportWeather)
+from collector.services.cities import (
+    CitySchema,
+    FetchCities,
+    FetchCoordinates,
+    InitCities,
+)
+from collector.services.weather import CollectScheduler, FetchWeather, ReportWeather
 
 
 @pytest.mark.usefixtures('mock_config', 'setup_database')
