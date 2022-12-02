@@ -27,7 +27,7 @@ repos:
         # language_version: python3.9
 
 
-  # - repo: https://github.com/streetsidesoftware/cspell-cli
-  #   rev: v6.2.0
-  #   hooks:
-  #     - id: cspell
+  - repo: https://github.com/streetsidesoftware/cspell-cli
+    rev: v6.2.0
+    hooks:
+      - id: cspell

@@ -1,0 +1,32 @@
+version: "0.2"
+ignorePaths:
+  - .gitignore
+  - requirements.txt
+  - alembic*
+allowCompoundWords: true
+dictionaries:
+  - python
+words:
+  - apscheduler
+  - clsname
+  - grnd
+  - isort
+  - Misha
+  - mypy
+  - ondelete
+  - onupdate
+  - psycopg
+  - pydantic
+  - pytest
+  - sqlalchemy
+  - testdb
+  - venv
+  - vybornyy
+ignoreWords: []
+import: []
+enableFiletypes:
+  - dockercompose
+  - ini
+  - makefile
+  - markdown
+  - toml

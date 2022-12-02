@@ -155,7 +155,7 @@ class CollectScheduler(BaseService):
             '-i',
             '--initial',
             action='store_true',
-            help='init cities before collecting. Usefull with -O flag',
+            help='init cities before collecting. Useful with -O flag',
         )
 
     def execute(self):
@@ -209,7 +209,7 @@ class ReportWeather(BaseService, DBSessionMixin):
     def __init__(self, average: bool = False, latest: bool = False, **kwargs) -> None:
         self.methods = [self.get_basic]
         if average:
-            self.methods.append(self.get_avarage)
+            self.methods.append(self.get_average)
         if latest:
             self.methods.append(self.get_latest)
 
@@ -220,7 +220,7 @@ class ReportWeather(BaseService, DBSessionMixin):
         parser.add_argument(
             '--average',
             action='store_true',
-            help='report avarage temperature for all cities',
+            help='report average temperature for all cities',
         )
         parser.add_argument(
             '--latest',
@@ -242,7 +242,7 @@ class ReportWeather(BaseService, DBSessionMixin):
             f'Collector storing {n_measure} weather measurements for {n_cites} cities.'
         )
 
-    def get_avarage(self):
+    def get_average(self):
         report = ''
         cites: list[CityModel] = self.query(CityModel).all()
         for city in cites:
@@ -257,10 +257,10 @@ class ReportWeather(BaseService, DBSessionMixin):
             n_measure = len(measurements)
             first = measurements[0]
             last = measurements[-1]
-            avarage = sum([measure.main.temp for measure in measurements]) / n_measure
+            average = sum([measure.main.temp for measure in measurements]) / n_measure
             report += (
                 '\n'
-                f'Average temperature at {city.name} is {avarage} C. '
+                f'Average temperature at {city.name} is {average} C. '
                 f'({n_measure} measurements {first.measure_at} ... {last.measure_at})'
             )
         return report

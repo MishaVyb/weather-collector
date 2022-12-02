@@ -17,7 +17,7 @@ services:
     depends_on:
       # [FIXME] helthcheck
       # This service starting running after previous has been mounted,
-      # but not after it has done its exicution.
+      # but not after it has done its execution.
       - db
     # env_file:
     #   - ./prod.env
