@@ -1,23 +1,23 @@
 version: '3.8'
-
+name: weather-collector-docker-compose
 services:
 
   db:
     image: postgres:13.0-alpine
     volumes:
-      - /var/lib/postgresql/data/
-    ports:
-      - 5432:5432
+      - postgres:/var/lib/postgresql/data/
     env_file:
       - ./prod.env
 
   worker:
     build: .
+    stdin_open: true
+    tty: true
     restart: on-failure
     depends_on:
-      # [FIXME] helthcheck
-      # This service starting running after previous has been mounted,
-      # but not after it has done its execution.
       - db
-    # env_file:
-    #   - ./prod.env
+    env_file:
+      - ./prod.env
+
+volumes:
+  postgres:

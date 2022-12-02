@@ -4,7 +4,7 @@ import pydantic
 
 from collector.functools import init_logger
 
-logger = init_logger('weather-collector', 'DEBUG')
+logger = init_logger('weather-collector', 'INFO')
 
 
 class DatabaseConfig(pydantic.BaseModel):
@@ -85,7 +85,7 @@ class CollectorConfig(pydantic.BaseSettings):
         if not isinstance(db, dict):
             return values
 
-        for config_field, postgres_field in zip(
+        for postgres_field, config_field in zip(
             ['POSTGRES_USER', 'POSTGRES_PASSWORD', 'POSTGRES_DB', 'POSTGRES_HOST'],
             ['user', 'password', 'database', 'host'],
         ):

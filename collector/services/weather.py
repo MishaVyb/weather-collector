@@ -124,6 +124,10 @@ class FetchWeather(
 
 
 class CollectScheduler(BaseService):
+    """
+    Fetching weather measurements continuesly.
+    """
+
     command = 'collect'
 
     def __init__(
@@ -203,6 +207,10 @@ class CollectScheduler(BaseService):
 
 
 class ReportWeather(BaseService, DBSessionMixin):
+    """
+    Get report about all weather measurements records. Default output is `sys.stdout`.
+    """
+
     command = 'report'
     output = sys.stdout
 

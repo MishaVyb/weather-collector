@@ -12,7 +12,7 @@ from collector.configurations import CONFIG, logger
 from collector.models import BaseModel
 
 try:
-    logger.info(f'Establishing connection to database: {CONFIG.db.url}')
+    logger.debug(f'Establishing (lazy) connection to database: {CONFIG.db.url}')
     engine = db.create_engine(CONFIG.db.url, future=True, echo=CONFIG.db.echo)
 except Exception as e:
     logger.critical(f'Connection failed. Check your database is running: {CONFIG.db}')

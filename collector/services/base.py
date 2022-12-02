@@ -4,68 +4,66 @@ import argparse
 from http import HTTPStatus
 from typing import Generic, Iterable, Type, TypeVar
 
-import pydantic
 import requests
+from pydantic import BaseModel, ValidationError, parse_obj_as
 
 from collector.configurations import CONFIG, logger
 from collector.exceptions import ResponseError, ResponseSchemaError
 
-_SchemaType = TypeVar(
-    '_SchemaType',
-    bound=pydantic.BaseModel | Iterable[pydantic.BaseModel],
-)
+_SchemaType = TypeVar('_SchemaType', bound=BaseModel | Iterable[BaseModel])
 """
-Bounded TypeVar for Generic classes that takes any subtype of pydantic.BaseModel class.
-Also bound to Iterable, because JSON response could be a `list[pydantic.BaseModel]`.
+Bounded TypeVar for Generic classes that takes any subtype of BaseModel class.
+Also bound to Iterable, because JSON response could be a `list[BaseModel]`.
 """
 
 
 class BaseService:
-    command: str = 'service'
+    command: str = 'service_name'
     "Command name to run service in command line. "
 
     def __init__(self, **kwargs) -> None:
         self.init_kwargs = kwargs
 
-    @staticmethod
-    def manage_services(argv: list[str]):
+    @classmethod
+    def manage_services(cls, argv: list[str]):
         """
         Parsing command line args and getting service initialized with thouse args.
         """
-        services_description = '\n'.join(
-            [
-                f'{service.command}:\n\t{service.__doc__}'
-                for service in BaseService.__subclasses__()
-            ]
-        )
-        logger.debug(services_description)
-
         parser = argparse.ArgumentParser(description='Weather Collector. ')
         parser.add_argument(
-            BaseService.command,
+            'service',
             type=str,
             help='service to proceed',
-            choices=[service.command for service in BaseService.__subclasses__()],
+            choices=[service.command for service in cls.__subclasses__()],
         )
-        for service in BaseService.__subclasses__():
+        for service in cls.__subclasses__():
             service.add_argument(parser)
 
         args = parser.parse_args(argv)
-        service_class = BaseService.get_service(command=args.service)
+        service_class = cls.get_service(command=args.service)
         return service_class(**dict(args._get_kwargs()))
 
-    @staticmethod
-    def get_service(*, command: str):
+    @classmethod
+    def get_service(cls, *, command: str):
         """
         Get collector service by provided command name.
         """
         filtered = filter(
-            lambda service: service.command == command, BaseService.__subclasses__()
+            lambda service: service.command == command, cls.__subclasses__()
         )
         try:
             return next(filtered)
         except StopIteration:
             raise ValueError(f'No service with this command: {command}. ')
+
+    @classmethod
+    def get_descriptions(cls):
+        return 'Collect Weather services description: \n' + '\n'.join(
+            [
+                f'{service.command}:\t{service.__doc__}'
+                for service in cls.__subclasses__()
+            ]
+        )
 
     @classmethod
     def add_argument(cls, parser: argparse.ArgumentParser):
@@ -96,8 +94,8 @@ class FetchServiceMixin(Generic[_SchemaType]):
             return self.response.json()
 
         try:
-            instance = pydantic.parse_obj_as(self.schema, self.response.json())
-        except pydantic.ValidationError as e:
+            instance = parse_obj_as(self.schema, self.response.json())
+        except ValidationError as e:
             raise ResponseSchemaError(e)
 
         return instance
